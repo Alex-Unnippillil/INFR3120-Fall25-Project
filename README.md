@@ -9,7 +9,8 @@ A daily schedule app focused on productivity. Plan, organize, and track tasks ac
 - [Features](#features)
 - [Getting Started](#getting-started)
 - [Roadmap](#roadmap)
-- [Contributing](#contributing)
+- [Contributing](#Contributors)
+)
 - [License](#license)
 
 ---
@@ -45,9 +46,10 @@ To support accessibility and convenience, the app includes options to save sched
    git clone https://github.com/<your-username>/PlanSimple.git
    cd PlanSimple
 
-##Contributing
-https://github.com/sr410
-https://github.com/mathewAONTARIO
-https://github.com/Alex-Unnippillil
+## Contributors
+
+- [@sr410](https://github.com/sr410)
+- [@mathewAONTARIO](https://github.com/mathewAONTARIO)
+- [@Alex-Unnippillil](https://github.com/Alex-Unnippillil)
 
 
