@@ -1,0 +1,7 @@
+Project Title: PlanSimple
+
+The Daily Schedule App is a productivity focused web application designed to help users efficiently plan, organize, and track their tasks throughout the week. The app allows users to select any day and quickly view their scheduled activities in a structured format, making it easy to stay organized and maintain a balanced workload. By providing a clear visual overview of daily responsibilities, the application supports users in managing their time more effectively
+
+Users can add tasks to specific hours of the day and include descriptions to keep track of important details. The system supports full task management through editing and deleting options, ensuring that schedules remain flexible and up to date. Color-coding allows users to visually categorize tasks such as work, personal, or academic responsibilities making the schedule easier to interpret at a glance. A dashboard view provides an organized presentation of tasks for either a single day or the entire week.
+
+To support accessibility and convenience, the app includes options to save schedules locally or print a physical copy for offline use. Its userfriendly interface is designed to allow smooth navigation between days and quick access to task creation and updates. The overall goal of the Daily Schedule App is to provide an intuitive, efficient, and visually structured tool that helps users manage their day-to-day tasks and improve productivity.
