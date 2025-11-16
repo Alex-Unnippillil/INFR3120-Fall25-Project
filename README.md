@@ -8,8 +8,6 @@ A daily schedule app focused on productivity. Plan, organize, and track tasks ac
 - [Overview](#overview)
 - [Features](#features)
 - [Getting Started](#getting-started)
-- [Usage](#usage)
-- [Print & Save](#print--save)
 - [Roadmap](#roadmap)
 - [Contributing](#contributing)
 - [License](#license)
@@ -46,3 +44,9 @@ To support accessibility and convenience, the app includes options to save sched
    ```bash
    git clone https://github.com/<your-username>/PlanSimple.git
    cd PlanSimple
+
+##Roadmap
+
+##Contributing
+
+##License
