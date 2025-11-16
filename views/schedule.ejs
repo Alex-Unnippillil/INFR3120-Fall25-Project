@@ -1,0 +1,212 @@
+<%- include('./partials/header') %>
+<%- include('./partials/main_nav') %>
+
+<div class="container mt-5">
+
+  <div class="d-flex align-items-center mb-4">
+    <img src="/Asset/images/logo.PNG"
+         alt="Logo"
+         style="height:60px; width:auto;"
+         class="me-3">
+    <div>
+      <h1 class="mb-1">Schedule</h1>
+      <p class="text-muted mb-0">Check your tasks for each day of the week.</p>
+    </div>
+  </div>
+
+  <div class="row mb-4" id="weekCards"></div>
+
+  <div class="mb-3">
+    <label for="daySelect" class="form-label fw-semibold">Select a day</label>
+    <select class="form-select" id="daySelect">
+      <option disabled selected>Choose a day...</option>
+      <option value="monday">Monday</option>
+      <option value="tuesday">Tuesday</option>
+      <option value="wednesday">Wednesday</option>
+      <option value="thursday">Thursday</option>
+      <option value="friday">Friday</option>
+      <option value="saturday">Saturday</option>
+      <option value="sunday">Sunday</option>
+    </select>
+  </div>
+
+  <div class="card shadow-sm">
+    <div class="card-body">
+      <h5 class="mb-3">Tasks</h5>
+
+      <div class="table-responsive">
+        <table class="table table-hover align-middle">
+          <thead>
+            <tr>
+              <th>Time</th>
+              <th>Title</th>
+              <th>Category</th>
+              <th>Color</th>
+              <th>Notes</th>
+              <th class="text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="tasksBody"></tbody>
+        </table>
+      </div>
+
+      <p id="emptyText" class="text-muted mt-2 d-none">
+        No tasks for this day.
+      </p>
+    </div>
+  </div>
+</div>
+
+<script>
+  var scheduleData = {
+    monday: [
+      { time: '09:00', title: 'Networking Lab',     category: 'Academic', color: '#4f46e5', notes: 'Finish lab work' },
+      { time: '14:00', title: 'Gym – Pull Day',     category: 'Personal', color: '#16a34a', notes: '' },
+      { time: '18:00', title: 'Work Shift',         category: 'Work',     color: '#dc2626', notes: '' }
+    ],
+    tuesday: [
+      { time: '10:00', title: 'PlanSimple Meeting', category: 'Academic', color: '#4f46e5', notes: 'Group check-in' },
+      { time: '16:30', title: 'Groceries',          category: 'Personal', color: '#16a34a', notes: '' }
+    ],
+    wednesday: [
+      { time: '08:30', title: '5K Run',             category: 'Personal', color: '#16a34a', notes: '' },
+      { time: '11:00', title: 'Cryptography',       category: 'Academic', color: '#4f46e5', notes: '' }
+    ],
+    thursday: [],
+    friday: [
+      { time: '09:30', title: 'Team Check-in',      category: 'Academic', color: '#4f46e5', notes: '' }
+    ],
+    saturday: [],
+    sunday: []
+  };
+
+    // load/hydrate from localStorage if available
+  (function(){
+    try{
+      var key = 'plansimple.tasks';
+      var raw = localStorage.getItem(key);
+      if(raw){
+        var tasks = JSON.parse(raw);
+        if(Array.isArray(tasks) && tasks.length){
+          //build he data structure day to day
+          var byDay = {monday:[], tuesday:[], wednesday:[], thursday:[], friday:[], saturday:[], sunday:[]};
+          function toDayKey(dateStr){
+            // expecting YYYY-MM-DD
+            var d = new Date(dateStr + 'T00:00:00');
+            var n = d.getDay(); // 0=Sun...6=Sat
+            return ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'][n] || 'monday';
+          }
+          // distribute tasks into days: { time, title, category, color, notes }
+          for(var i=0;i<tasks.length;i++){
+            var t = tasks[i] || {};
+            var keyName = toDayKey(t.date || '');
+            byDay[keyName].push({
+              time: t.start || '',
+              title: t.title || '(Untitled)',
+              category: (t.category || 'Personal'),
+              color: t.color || '#0d6efd',
+              notes: t.notes || ''
+            });
+          }
+         scheduleData = byDay;
+        }
+      }
+    }catch(e){
+      console.warn('Could not read tasks from localStorage:', e);
+    }
+  })();
+
+
+  var dayNames = {
+    monday: 'Monday',
+    tuesday: 'Tuesday',
+    wednesday: 'Wednesday',
+    thursday: 'Thursday',
+    friday: 'Friday',
+    saturday: 'Saturday',
+    sunday: 'Sunday'
+  };
+
+  var daySelect  = document.getElementById('daySelect');
+  var tasksBody  = document.getElementById('tasksBody');
+  var emptyText  = document.getElementById('emptyText');
+  var weekCards  = document.getElementById('weekCards');
+
+  function badgeClass(category) {
+    if (category === 'Work') return 'badge bg-danger-subtle text-danger';
+    if (category === 'Personal') return 'badge bg-success-subtle text-success';
+    return 'badge bg-primary-subtle text-primary';
+  }
+
+  function loadWeekCards() {
+    weekCards.innerHTML = '';
+    for (var key in scheduleData) {
+      var count = scheduleData[key].length;
+
+      var col = document.createElement('div');
+      col.className = 'col-6 col-md-3 mb-3';
+
+      var html = '';
+      html += '<div class="card shadow-sm h-100">';
+      html += '<div class="card-body text-center py-3">';
+      html += '<h6 class="mb-1">' + dayNames[key] + '</h6>';
+      html += '<p class="text-muted mb-0"><strong>' + count + '</strong> task';
+      if (count !== 1) html += 's';
+      html += '</p>';
+      html += '</div></div>';
+
+      col.innerHTML = html;
+      weekCards.appendChild(col);
+    }
+  }
+
+  function loadTasks(dayKey) {
+    tasksBody.innerHTML = '';
+    var tasks = scheduleData[dayKey] || [];
+
+    if (tasks.length === 0) {
+      emptyText.classList.remove('d-none');
+      return;
+    }
+
+    emptyText.classList.add('d-none');
+
+    for (var i = 0; i < tasks.length; i++) {
+      var t = tasks[i];
+      var row = document.createElement('tr');
+
+      var rowHtml = '';
+      rowHtml += '<td>' + t.time + '</td>';
+      rowHtml += '<td>' + t.title + '</td>';
+      rowHtml += '<td><span class="' + badgeClass(t.category) + '">' + t.category + '</span></td>';
+      rowHtml += '<td>';
+      rowHtml += '<span style="background:' + t.color + '; display:inline-block; width:14px; height:14px; border-radius:50%; border:1px solid #ddd;"></span>';
+      rowHtml += ' <span class="text-muted">' + t.color + '</span>';
+      rowHtml += '</td>';
+
+      if (t.notes && t.notes.trim() !== '') {
+        rowHtml += '<td>' + t.notes + '</td>';
+      } else {
+        rowHtml += '<td><span class="text-muted">—</span></td>';
+      }
+
+      rowHtml += '<td class="text-end">';
+      rowHtml += '<button class="btn btn-sm btn-outline-secondary" disabled>Edit</button> ';
+      rowHtml += '<button class="btn btn-sm btn-outline-danger" disabled>Delete</button>';
+      rowHtml += '</td>';
+
+      row.innerHTML = rowHtml;
+      tasksBody.appendChild(row);
+    }
+  }
+
+  loadWeekCards();
+  loadTasks('monday');
+  daySelect.value = 'monday';
+
+  daySelect.addEventListener('change', function (e) {
+    loadTasks(e.target.value);
+  });
+</script>
+
+<%- include('./partials/footer') %>
