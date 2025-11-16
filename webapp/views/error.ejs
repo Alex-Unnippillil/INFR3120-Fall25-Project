@@ -1,9 +1,10 @@
-<%-include ./partials/header.ejs %>
-<%-include ./partials/main_nav.ejs %>
+<%- include('./partials/header') %>
+<%- include('./partials/main_nav') %>
 
 <h1><%= message %></h1>
 <h2><%= error.status %></h2>
 <pre><%= error.stack %></pre>
 
-<%-include ./partials/footer.ejs %>
+<%- include('./partials/footer') %> 
+
 
