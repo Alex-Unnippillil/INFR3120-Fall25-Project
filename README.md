@@ -45,8 +45,9 @@ To support accessibility and convenience, the app includes options to save sched
    git clone https://github.com/<your-username>/PlanSimple.git
    cd PlanSimple
 
-##Roadmap
-
 ##Contributing
+https://github.com/sr410
+https://github.com/mathewAONTARIO
+https://github.com/Alex-Unnippillil
 
-##License
+
