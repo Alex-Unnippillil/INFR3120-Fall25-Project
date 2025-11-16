@@ -4,7 +4,7 @@
 <div class="container mt-5">
 
   <div class="d-flex align-items-center mb-4">
-    <img src="/asset/images/logo.png"
+    <img src="/Asset/images/logo.PNG"
          alt="Logo"
          style="height:60px; width:auto;"
          class="me-3">
@@ -79,6 +79,43 @@
     saturday: [],
     sunday: []
   };
+
+  // get schedule from localStorage if user created tasks on Home page.
+  (function(){
+    try{
+      var key = 'plansimple.tasks';
+      var raw = localStorage.getItem(key);
+      if(raw){
+        var tasks = JSON.parse(raw);
+        if(Array.isArray(tasks) && tasks.length){
+          // Build map by weekday
+          var byDay = {monday:[], tuesday:[], wednesday:[], thursday:[], friday:[], saturday:[], sunday:[]};
+          function toDayKey(dateStr){
+            // looking for YYYY-MM-DD
+            var d = new Date(dateStr + 'T00:00:00');
+            var n = d.getDay(); // 0=Sun...6=Sat
+            return ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'][n] || 'monday';
+          }
+          // normalize task shape to match home page { time, title, category, color, notes }
+          for(var i=0;i<tasks.length;i++){
+            var t = tasks[i] || {};
+            var keyName = toDayKey(t.date || '');
+            byDay[keyName].push({
+              time: t.start || '',
+              title: t.title || '(Untitled)',
+              category: (t.category || 'Personal'),
+              color: t.color || '#0d6efd',
+              notes: t.notes || ''
+            });
+          }
+          scheduleData = byDay;
+        }
+      }
+    }catch(e){
+      console.warn('Could not read tasks from localStorage:', e);
+    }
+  })();
+
 
   var dayNames = {
     monday: 'Monday',
