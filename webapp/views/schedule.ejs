@@ -98,7 +98,7 @@
       var map = {monday:[], tuesday:[], wednesday:[], thursday:[], friday:[], saturday:[], sunday:[]};
       function toDayKey(dateStr){
         var d = new Date((dateStr || '') + 'T00:00:00');
-        var n = d.getDay(); // 0=Sun..6=Sat
+        var n = d.getDay(); 
         return ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'][n] || 'monday';
       }
       tasks.forEach(function(t){
