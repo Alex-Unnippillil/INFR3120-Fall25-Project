@@ -1,0 +1,13 @@
+version: 1.0
+runtime: nodejs22
+build:
+  commands:
+    # Installs only production deps (no dev deps). Works without a lockfile.
+    build:
+      - npm install --production
+run:
+  # Use your existing start script (runs `node ./server.js`)
+  command: npm start
+  # Optional: you can omit this; default is 8080 and App Runner exposes $PORT.
+  # network:
+  #   port: 8080
