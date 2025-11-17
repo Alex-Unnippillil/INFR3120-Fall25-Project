@@ -44,7 +44,7 @@
                 alert('Task "' + task.title + '" created!');
                 var modalEl = document.getElementById('createTaskModal');
                 if(window.bootstrap){
-                    var modal = modalEl ? bootstrap.Modal.getInstance(modalEl) : null;
+                    var modal = modalEl ? bootstrap.Modal.getOrCreateInstance(modalEl) : null;
                     if(modal){ modal.hide(); }
                 }
                 // route toschedule page

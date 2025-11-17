@@ -28,15 +28,16 @@
       <option value="saturday">Saturday</option>
       <option value="sunday">Sunday</option>
     </select>
-      <p class="text-muted mb-0"> Create a task for the selected day.</p>
-
-    <button class="btn btn-primary ms-3" data-bs-toggle="modal" data-bs-target="#createTaskModal">Add Task</button>
-
   </div>
 
   <div class="card shadow-sm">
     <div class="card-body">
-      <h5 class="mb-3">Tasks</h5>
+    <div class="d-flex align-items-center justify-content-between mb-3">
+      <h5 class="mb-0">Tasks</h5>
+      <button id="addTaskBtn" type="button" class="btn btn-primary btn-sm">
+        <i class="fa-solid fa-plus"></i> Add Task
+      </button>
+    </div>
 
       <div class="table-responsive">
         <table class="table table-hover align-middle">
@@ -62,7 +63,8 @@
 </div>
 
 <script>
-  var scheduleData = {
+// Seed demo data (used to pre-populate localStorage once if empty)
+var scheduleData = {
     monday: [
       { time: '09:00', title: 'Networking Lab',     category: 'Academic', color: '#4f46e5', notes: 'Finish lab work' },
       { time: '14:00', title: 'Gym – Pull Day',     category: 'Personal', color: '#16a34a', notes: '' },
@@ -84,45 +86,27 @@
     sunday: []
   };
 
-  // get schedule from localStorage if user created tasks on Home page.
-  //EDITOR'S NOTE: This function attempts to read tasks from localStorage
-  //FIX TO ONLY RENDER THE STATIC SAMPLE DATA TO FIX IT TO SAVE THE INJECTED.
-  
-  (function(){
-    try{
-      var raw = localStorage.getItem('plansimple.tasks');
-      if(!raw) return;
-      var tasks = JSON.parse(raw);
-      if(!Array.isArray(tasks) || !tasks.length) return;
+// simple Schedule — working CRUD app using localStorage ===
+// replaced demo only code with working Edit/Delete buttons.
 
-      var map = {monday:[], tuesday:[], wednesday:[], thursday:[], friday:[], saturday:[], sunday:[]};
-      function toDayKey(dateStr){
-        var d = new Date((dateStr || '') + 'T00:00:00');
-        var n = d.getDay(); 
-        return ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'][n] || 'monday';
-      }
-      tasks.forEach(function(t){
-        var k = toDayKey(t.date || '');
-        (map[k] = map[k] || []).push({
-          id: t.id,
-          time: t.start || '',
-          title: t.title || '(Untitled)',
-          category: t.category || 'Personal',
-          color: t.color || '#16a34a',
-          notes: t.notes || ''
-        });
-      });
-      Object.keys(map).forEach(function(dkey){
-        if(map[dkey].length){
-          scheduleData[dkey] = (scheduleData[dkey] || []).concat(map[dkey]);
-        }
-      });
-    }catch(e){
-      console.warn('Could not read tasks from localStorage:', e);
-    }
-  })();
+(function() {
+  //DOM handlers & elements 
+  var daySelect  = document.getElementById('daySelect');
+  var tasksBody  = document.getElementById('tasksBody');
+  var emptyText  = document.getElementById('emptyText');
+  var weekCards  = document.getElementById('weekCards');
 
-
+  // Add Task modal & form
+  var scheduleTaskModalEl = document.getElementById('scheduleTaskModal');
+  var scheduleTaskForm = document.getElementById('scheduleTaskForm');
+  var addTaskBtn = document.getElementById('addTaskBtn');
+  var modal = null;
+  if (window.bootstrap && scheduleTaskModalEl) {
+    modal = bootstrap.Modal.getOrCreateInstance(scheduleTaskModalEl);
+  }
+  //Constants & helpers 
+  var STORAGE_KEY = 'plansimple.tasks';
+  var daySeq = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
   var dayNames = {
     monday: 'Monday',
     tuesday: 'Tuesday',
@@ -133,86 +117,316 @@
     sunday: 'Sunday'
   };
 
-  var daySelect  = document.getElementById('daySelect');
-  var tasksBody  = document.getElementById('tasksBody');
-  var emptyText  = document.getElementById('emptyText');
-  var weekCards  = document.getElementById('weekCards');
+  function readAllTasks() {
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return [];
+      var arr = JSON.parse(raw);
+      return Array.isArray(arr) ? arr : [];
+    } catch(e) {
+      console.warn('Failed to read tasks from storage', e);
+      return [];
+    }
+  }
+  function writeAllTasks(arr) {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(arr || [])); }
+    catch(e) { console.warn('Failed to write tasks', e); }
+  }
+
+  function pad2(n){ return (n<10 ? '0' : '') + n; }
+  function fmtDate(d) { return d.getFullYear() + '-' + pad2(d.getMonth()+1) + '-' + pad2(d.getDate()); }
+
+  function dayIndex(dayKey) { return {sunday:0,monday:1,tuesday:2,wednesday:3,thursday:4,friday:5,saturday:6}[dayKey]; }
+  function toDayKey(dateStr){
+    var d = new Date(dateStr + 'T00:00:00');
+    var n = d.getDay(); // 0=Sun... 6=Sat 
+    return ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'][n] || 'monday';
+  }
+  function nextDateForDay(dayKey){
+    var target = dayIndex(dayKey);
+    var d = new Date();
+    d.setHours(0,0,0,0);
+    var diff = (target - d.getDay() + 7) % 7;
+    if (diff === 0) diff = 7; // next occurrence
+    d.setDate(d.getDate() + diff);
+    return d;
+  }
 
   function badgeClass(category) {
     if (category === 'Work') return 'badge bg-danger-subtle text-danger';
     if (category === 'Personal') return 'badge bg-success-subtle text-success';
     return 'badge bg-primary-subtle text-primary';
   }
+  function esc(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;').replace(/"/g,'&quot;')
+      .replace(/'/g,'&#039;');
+  }
+  function sortByStart(a,b) { return String(a.start||'').localeCompare(String(b.start||'')); }
 
-  function loadWeekCards() {
+  // Seed demo tasks into storage once for first-time users. so they can see edit funcationality 
+  function seedFromScheduleDataIfEmpty() {
+    var existing = readAllTasks();
+    if (existing.length) return existing;
+
+    var seeded = [];
+    for (var k=0; k<daySeq.length; k++) {
+      var key = daySeq[k];
+      var arr = (window.scheduleData && window.scheduleData[key]) || [];
+      var baseDate = fmtDate(nextDateForDay(key));
+      for (var i=0; i<arr.length; i++) {
+        var t = arr[i] || {};
+        seeded.push({
+          id: Date.now() + Math.floor(Math.random() * 1e6),
+          title: t.title || '(Untitled)',
+          date: baseDate,
+          start: t.time || '',
+          end: '',
+          category: t.category || 'Personal',
+          color: t.color || '#0d6efd',
+          notes: t.notes || ''
+        });
+      }
+    }
+    writeAllTasks(seeded);
+    return seeded;
+  }
+
+  var allTasks = seedFromScheduleDataIfEmpty();
+
+  // Rendering 
+  function renderWeekCards() {
     weekCards.innerHTML = '';
-    for (var key in scheduleData) {
-      var count = scheduleData[key].length;
+    for (var k=0; k<daySeq.length; k++) {
+      var key = daySeq[k];
+      var count = allTasks.filter(function(t){ return toDayKey(t.date) === key; }).length;
 
       var col = document.createElement('div');
       col.className = 'col-6 col-md-3 mb-3';
 
       var html = '';
       html += '<div class="card shadow-sm h-100">';
-      html += '<div class="card-body text-center py-3">';
-      html += '<h6 class="mb-1">' + dayNames[key] + '</h6>';
-      html += '<p class="text-muted mb-0"><strong>' + count + '</strong> task';
-      if (count !== 1) html += 's';
-      html += '</p>';
-      html += '</div></div>';
+      html += '  <div class="card-body text-center py-3">';
+      html += '    <h6 class="mb-1">' + dayNames[key] + '</h6>';
+      html += '    <p class="text-muted mb-0"><strong>' + count + '</strong> task' + (count === 1 ? '' : 's') + '</p>';
+      html += '  </div>';
+      html += '</div>';
 
       col.innerHTML = html;
       weekCards.appendChild(col);
     }
   }
 
-  function loadTasks(dayKey) {
+  function renderDay(dayKey) {
     tasksBody.innerHTML = '';
-    var tasks = scheduleData[dayKey] || [];
+    var dayTasks = allTasks
+      .filter(function(t){ return toDayKey(t.date) === dayKey; })
+      .sort(sortByStart);
 
-    if (tasks.length === 0) {
+    if (!dayTasks.length) {
       emptyText.classList.remove('d-none');
       return;
     }
-
     emptyText.classList.add('d-none');
 
-    for (var i = 0; i < tasks.length; i++) {
-      var t = tasks[i];
+    for (var i=0; i<dayTasks.length; i++) {
+      var t = dayTasks[i];
       var row = document.createElement('tr');
-
       var rowHtml = '';
-      rowHtml += '<td>' + t.time + '</td>';
-      rowHtml += '<td>' + t.title + '</td>';
-      rowHtml += '<td><span class="' + badgeClass(t.category) + '">' + t.category + '</span></td>';
+      rowHtml += '<td>' + esc(t.start || '') + '</td>';
+      rowHtml += '<td>' + esc(t.title || '') + '</td>';
+      rowHtml += '<td><span class="' + badgeClass(t.category) + '">' + esc(t.category || '') + '</span></td>';
       rowHtml += '<td>';
-      rowHtml += '<span style="background:' + t.color + '; display:inline-block; width:14px; height:14px; border-radius:50%; border:1px solid #ddd;"></span>';
-      rowHtml += ' <span class="text-muted">' + t.color + '</span>';
+      rowHtml += '  <span style="background:' + esc(t.color || '#0d6efd') + '; display:inline-block; width:14px; height:14px; border-radius:50%; border:1px solid #ddd;"></span>';
+      rowHtml += '  <span class="text-muted ms-1">' + esc(t.color || '#0d6efd') + '</span>';
       rowHtml += '</td>';
-
-      if (t.notes && t.notes.trim() !== '') {
-        rowHtml += '<td>' + t.notes + '</td>';
-      } else {
-        rowHtml += '<td><span class="text-muted">—</span></td>';
-      }
-
+      rowHtml += '<td>' + (t.notes && t.notes.trim() !== '' ? esc(t.notes) : '<span class="text-muted">—</span>') + '</td>';
       rowHtml += '<td class="text-end">';
-      rowHtml += '<button class="btn btn-sm btn-outline-secondary" disabled>Edit</button> ';
-      rowHtml += '<button class="btn btn-sm btn-outline-danger" disabled>Delete</button>';
+      rowHtml += '  <button class="btn btn-sm btn-outline-secondary me-1" data-action="edit" data-id="' + esc(t.id) + '">Edit</button>';
+      rowHtml += '  <button class="btn btn-sm btn-outline-danger" data-action="delete" data-id="' + esc(t.id) + '">Delete</button>';
       rowHtml += '</td>';
-
       row.innerHTML = rowHtml;
       tasksBody.appendChild(row);
     }
   }
 
-  loadWeekCards();
-  loadTasks('monday');
-  daySelect.value = 'monday';
+  function rerender() {
+    renderWeekCards();
+    renderDay(daySelect.value || 'monday');
+  }
 
-  daySelect.addEventListener('change', function (e) {
-    loadTasks(e.target.value);
-  });
+  // model Events binding task handlers
+  function clearForm() {
+    scheduleTaskForm.reset();
+    document.getElementById('sTaskId').value = '';
+    // Prefill date to selected day
+    var d = nextDateForDay(daySelect.value || 'monday');
+    document.getElementById('sTaskDate').value = fmtDate(d);
+    document.getElementById('sTaskColor').value = '#0d6efd';
+    document.getElementById('scheduleModalTitle').textContent = 'Add Task';
+  }
+
+  function fillFormFromTask(t) {
+    document.getElementById('sTaskId').value = t.id;
+    document.getElementById('sTaskTitle').value = t.title || '';
+    document.getElementById('sTaskDate').value = t.date || '';
+    document.getElementById('sStartTime').value = t.start || '';
+    document.getElementById('sEndTime').value = t.end || '';
+    document.getElementById('sTaskCategory').value = t.category || 'Personal';
+    document.getElementById('sTaskColor').value = t.color || '#0d6efd';
+    document.getElementById('sTaskNotes').value = t.notes || '';
+    document.getElementById('scheduleModalTitle').textContent = 'Edit Task';
+  }
+
+  function openCreateModal() {
+    clearForm();
+    if (modal) modal.show();
+  }
+  function openEditModal(taskId) {
+    var t = allTasks.find(function(x){ return String(x.id) === String(taskId); });
+    if (!t) return;
+    fillFormFromTask(t);
+    if (modal) modal.show();
+  }
+
+  // Events binding task handlers
+  if (addTaskBtn) {
+    addTaskBtn.addEventListener('click', function(e){
+      e.preventDefault();
+      openCreateModal();
+    });
+  }
+
+  if (scheduleTaskForm) {
+    scheduleTaskForm.addEventListener('submit', function(e){
+      e.preventDefault();
+      var id = document.getElementById('sTaskId').value.trim();
+      var payload = {
+        title: document.getElementById('sTaskTitle').value.trim(),
+        date:  document.getElementById('sTaskDate').value,
+        start: document.getElementById('sStartTime').value,
+        end:   document.getElementById('sEndTime').value,
+        category: document.getElementById('sTaskCategory').value,
+        color: document.getElementById('sTaskColor').value || '#0d6efd',
+        notes: document.getElementById('sTaskNotes').value.trim()
+      };
+
+      if (!payload.title || !payload.date) {
+        alert('Title and Date are required.');
+        return;
+      }
+
+      if (id) {
+        // Update existing
+        var idx = allTasks.findIndex(function(x){ return String(x.id) === String(id); });
+        if (idx !== -1) {
+          allTasks[idx] = Object.assign({}, allTasks[idx], payload);
+        }
+      } else {
+        // Create new
+        payload.id = Date.now();
+        allTasks.push(payload);
+      }
+
+      writeAllTasks(allTasks);
+      if (modal) modal.hide();
+      rerender();
+    });
+  }
+
+  if (tasksBody) {
+    tasksBody.addEventListener('click', function(e){
+      var btn = e.target.closest('button[data-action]');
+      if (!btn) return;
+      var id = btn.getAttribute('data-id');
+      var action = btn.getAttribute('data-action');
+      if (action === 'edit') {
+        openEditModal(id);
+      } else if (action === 'delete') {
+        if (confirm('Delete this task?')) {
+          allTasks = allTasks.filter(function(x){ return String(x.id) !== String(id); });
+          writeAllTasks(allTasks);
+          rerender();
+        }
+      }
+    });
+  }
+
+  if (daySelect) {
+    daySelect.addEventListener('change', function(e) {
+      renderDay(e.target.value);
+    });
+  }
+
+  // 7) Initial render /default 
+  daySelect.value = 'monday';   // default tab
+  rerender();
+})();
 </script>
+
+
+<!-- Add/Edit Task modal for schedule -->
+<div class="modal fade" id="scheduleTaskModal" tabindex="-1" aria-labelledby="scheduleTaskLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><span id="scheduleModalTitle">Add Task</span></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <form id="scheduleTaskForm">
+        <input type="hidden" id="sTaskId" />
+
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="sTaskTitle" class="form-label">Title</label>
+            <input type="text" class="form-control" id="sTaskTitle" required>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label for="sTaskDate" class="form-label">Date</label>
+              <input type="date" class="form-control" id="sTaskDate" required>
+            </div>
+            <div class="col-md-3 mb-3">
+              <label for="sStartTime" class="form-label">Start</label>
+              <input type="time" class="form-control" id="sStartTime" required>
+            </div>
+            <div class="col-md-3 mb-3">
+              <label for="sEndTime" class="form-label">End</label>
+              <input type="time" class="form-control" id="sEndTime">
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label for="sTaskCategory" class="form-label">Category</label>
+              <select class="form-select" id="sTaskCategory">
+                <option>Personal</option>
+                <option>Work</option>
+                <option>Academic</option>
+              </select>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label for="sTaskColor" class="form-label">Color</label>
+              <input type="color" class="form-control form-control-color" id="sTaskColor" value="#0d6efd">
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label for="sTaskNotes" class="form-label">Notes</label>
+            <textarea class="form-control" id="sTaskNotes" rows="3"></textarea>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
 
 <%- include('./partials/footer') %>
