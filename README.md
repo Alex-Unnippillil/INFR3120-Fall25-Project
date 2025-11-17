@@ -42,7 +42,7 @@ To support accessibility and convenience, the app includes options to save sched
 
 1. **Clone the repo**
    ```bash
-   git clone https://github.com/<your-username>/PlanSimple.git
+   git clone https://github.com/Alex-Unnippillil/INFR3120-Fall25-Project.git
    cd PlanSimple
 
 ## Contributors
