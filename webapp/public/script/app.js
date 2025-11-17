@@ -15,7 +15,12 @@
                     date: document.getElementById("taskDate").value,
                     start: document.getElementById("startTime").value,
                     end: document.getElementById("endTime").value,
-                    priority: document.getElementById("priority").value,
+                    // set priority as optional
+                    priority: (function(){ 
+                        var el = document.getElementById("priority"); 
+                        return el ? el.value : "Normal"; 
+                    })(),
+
                     notes: document.getElementById("notes").value.trim()
                 };
 
@@ -26,22 +31,25 @@
 
                 var key = "plansimple.tasks";
                 try{
-                    var tasks = JSON.parse(localStorage.getItem(key) || "[]");
-                    tasks.push(task);
-                    localStorage.setItem(key, JSON.stringify(tasks));
+                    var tasks = JSON.parse(localStorage.getItem(key) || "[]"); // get THE existing tasks
+                    var idx = tasks.findIndex(function(t){ return String(t.id) === String(task.id); }); // check for existing task by id
+                    if(idx >= 0){ tasks[idx] = task; } else { tasks.push(task); } // add new task
+                    localStorage.setItem(key, JSON.stringify(tasks)); // save back to localStorage 
                 }catch(err){
                     console.error("Couldn't save to the localStorage", err);
                     alert("Sorry, couldn't save your task right now.");
                     return;
                 }
-                // Give the feedback and navigate to the scheduler page
+                // feedback and redirect to schedule page
                 alert('Task "' + task.title + '" created!');
+                var modalEl = document.getElementById('createTaskModal');
                 if(window.bootstrap){
-                    var modalEl = document.getElementById('taskModal');
-                    var modal = bootstrap.Modal.getInstance(modalEl);
-                    modal.hide();       
+                    var modal = modalEl ? bootstrap.Modal.getInstance(modalEl) : null;
+                    if(modal){ modal.hide(); }
                 }
-                window.location.href = "schedule.html";
+                // route toschedule page
+                window.location.href = '/schedule';
+
             });
         }
     }

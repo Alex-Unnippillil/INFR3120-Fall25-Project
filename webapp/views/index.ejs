@@ -5,7 +5,7 @@
 
   
   <div class="text-center mb-4">
-    <img src="/asset/images/logo.png" alt="Logo" style="height: 90px; width:auto;" class="mb-3">
+    <img src="/Asset/images/logo.PNG" alt="Logo" style="height: 90px; width:auto;" class="mb-3">
     <h1 class="display-4 fw-bold">PlanSimple</h1>
     <p class="lead text-muted">Your daily planning made simple, organized, and productive.</p>
   </div>
@@ -90,10 +90,28 @@
               <input type="time" class="form-control" id="endTime" name="end">
             </div>
           </div>
+          <input type="hidden" id="taskId" value=""> <!-- used for edits -->
+
+          <div class="mb-3">
+            <label for="category" class="form-label">Category</label>
+            <select class="form-select" id="category" name="category">
+              <option value="Academic">Academic</option>
+              <option value="Personal" selected>Personal</option>
+              <option value="Work">Work</option>
+            </select>
+          </div>
+
           <div class="mb-3">
             <label for="color" class="form-label">Color</label>
-            <input type="color" class="form-control form-control-color" id="color" name="color" value="#008000" title="Choose your color">  
-
+            <select class="form-select" id="color" name="color">
+              <option value="#4f46e5">Indigo</option>
+              <option value="#16a34a" selected>Green</option>
+              <option value="#dc2626">Red</option>
+              <option value="#f59e0b">Amber</option>
+              <option value="#0ea5e9">Sky</option>
+              <option value="#9333ea">Violet</option>
+            </select>
+          </div>
           <div class="mb-3">
             <label for="notes" class="form-label">Notes</label>
             <textarea class="form-control" id="notes" name="notes" rows="3"></textarea>

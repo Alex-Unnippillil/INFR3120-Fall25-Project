@@ -28,6 +28,10 @@
       <option value="saturday">Saturday</option>
       <option value="sunday">Sunday</option>
     </select>
+      <p class="text-muted mb-0"> Create a task for the selected day.</p>
+
+    <button class="btn btn-primary ms-3" data-bs-toggle="modal" data-bs-target="#createTaskModal">Add Task</button>
+
   </div>
 
   <div class="card shadow-sm">
@@ -81,36 +85,38 @@
   };
 
   // get schedule from localStorage if user created tasks on Home page.
+  //EDITOR'S NOTE: This function attempts to read tasks from localStorage
+  //FIX TO ONLY RENDER THE STATIC SAMPLE DATA TO FIX IT TO SAVE THE INJECTED.
+  
   (function(){
     try{
-      var key = 'plansimple.tasks';
-      var raw = localStorage.getItem(key);
-      if(raw){
-        var tasks = JSON.parse(raw);
-        if(Array.isArray(tasks) && tasks.length){
-          // Build map by weekday
-          var byDay = {monday:[], tuesday:[], wednesday:[], thursday:[], friday:[], saturday:[], sunday:[]};
-          function toDayKey(dateStr){
-            // looking for YYYY-MM-DD
-            var d = new Date(dateStr + 'T00:00:00');
-            var n = d.getDay(); // 0=Sun...6=Sat
-            return ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'][n] || 'monday';
-          }
-          // normalize task shape to match home page { time, title, category, color, notes }
-          for(var i=0;i<tasks.length;i++){
-            var t = tasks[i] || {};
-            var keyName = toDayKey(t.date || '');
-            byDay[keyName].push({
-              time: t.start || '',
-              title: t.title || '(Untitled)',
-              category: (t.category || 'Personal'),
-              color: t.color || '#0d6efd',
-              notes: t.notes || ''
-            });
-          }
-          scheduleData = byDay;
-        }
+      var raw = localStorage.getItem('plansimple.tasks');
+      if(!raw) return;
+      var tasks = JSON.parse(raw);
+      if(!Array.isArray(tasks) || !tasks.length) return;
+
+      var map = {monday:[], tuesday:[], wednesday:[], thursday:[], friday:[], saturday:[], sunday:[]};
+      function toDayKey(dateStr){
+        var d = new Date((dateStr || '') + 'T00:00:00');
+        var n = d.getDay(); // 0=Sun..6=Sat
+        return ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'][n] || 'monday';
       }
+      tasks.forEach(function(t){
+        var k = toDayKey(t.date || '');
+        (map[k] = map[k] || []).push({
+          id: t.id,
+          time: t.start || '',
+          title: t.title || '(Untitled)',
+          category: t.category || 'Personal',
+          color: t.color || '#16a34a',
+          notes: t.notes || ''
+        });
+      });
+      Object.keys(map).forEach(function(dkey){
+        if(map[dkey].length){
+          scheduleData[dkey] = (scheduleData[dkey] || []).concat(map[dkey]);
+        }
+      });
     }catch(e){
       console.warn('Could not read tasks from localStorage:', e);
     }
