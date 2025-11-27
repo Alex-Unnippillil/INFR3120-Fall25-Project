@@ -2,9 +2,9 @@
   <div class="container-fluid">
 
     <a class="navbar-brand d-flex align-items-center" href="/">
-  <img src="/Asset/images/logo.PNG" alt="Logo" style="height:32px; width:auto; margin-right:8px;">
-  PlanSimple
-</a>
+      <img src="/Asset/images/logo.PNG" alt="Logo" style="height:32px; width:auto; margin-right:8px;">
+      PlanSimple
+    </a>
 
     <button class="navbar-toggler" type="button"
         data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
@@ -38,6 +38,29 @@
             <a class="nav-link" href="/help"><i class="fa-solid fa-info"></i> Info</a>
           <% } %>
         </li>
+
+       <% if (!user) { %>
+        <li class="nav-item">
+          <% if (title == "Login") { %>
+      <a class="nav-link active" href="/login"><i class="fa-regular fa-user"></i> Login</a>
+      <% } else { %>
+      <a class="nav-link" href="/login"><i class="fa-regular fa-user"></i> Login</a>
+      <% } %>
+    </li>
+
+  <li class="nav-item">
+    <% if (title == "Register") { %>
+      <a class="nav-link active" href="/register"><i class="fa-solid fa-right-to-bracket"></i> Register</a>
+    <% } else { %>
+      <a class="nav-link" href="/register"><i class="fa-solid fa-right-to-bracket"></i> Register</a>
+    <% } %>
+  </li>
+  <% } else { %>
+  <li class="nav-item">
+    <span class="nav-link">Hello, <%= user.email %></span>
+  </li>
+  <li class="nav-item"><a class="nav-link" href="/logout">Logout</a></li>
+  <% } %>
 
       </ul>
     </div>
