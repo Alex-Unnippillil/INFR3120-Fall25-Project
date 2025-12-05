@@ -3,10 +3,11 @@ const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const GitHubStrategy = require('passport-github2').Strategy;
 const User = require('./models/User');
+
 //helper to find ./craete a new user or update existing one based on OAuth profile
 async function upsertOAuthUser({ provider, providerId, email, displayName }) {
-  const query = {};
-  query[provider + 'Id'] = providerId;
+  const field = provider + 'Id';
+  const query = { [field]: providerId };
 
   // Try provider ID
   let user = await User.findOne(query);
@@ -17,125 +18,117 @@ async function upsertOAuthUser({ provider, providerId, email, displayName }) {
   }
 
   if (user) {
-    if (!user[provider + 'Id']) {
-      user[provider + 'Id'] = providerId;
+    // Link provider id if not linked alreadu
+    if (!user[field]) {
+      user[field] = providerId;
       await user.save();
     }
     return user;
   }
 
-  // Create new user
+  // create a new user
   user = new User({
     email: email ? email.toLowerCase() : `${provider}-${providerId}@example.com`,
     displayName: displayName || email || `${provider} user`,
-    [provider + 'Id']: providerId
+    [field]: providerId
   });
 
   await user.save();
   return user;
 }
 
-/* Google Strategy */
+/*  Google Strategy  */
 
-const googleClientID = process.env.GOOGLE_CLIENT_ID; // get from environment variables
-const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET; // get from environment variables
-const googleCallbackURL =   
-  process.env.GOOGLE_CALLBACK_URL || // get from environment variables
-  'http://localhost:3000/auth/google/callback'; // default callback URL
+// Use real env vars in prod; fallback strings avoid crashes for when.env missing
+const googleClientID =
+  process.env.GOOGLE_CLIENT_ID || 'missing-google-client-id';
+const googleClientSecret =
+  process.env.GOOGLE_CLIENT_SECRET || 'missing-google-client-secret';
+const googleCallbackURL =
+  process.env.GOOGLE_CALLBACK_URL ||
+  'http://localhost:3000/auth/google/callback';
 
-console.log('Google OAuth Config:', { googleClientID: !!googleClientID, googleClientSecret: !!googleClientSecret });
-
-if (googleClientID && googleClientSecret) {//check if credentials are set
-  passport.use(
-    new GoogleStrategy( /// use Google OAuth strategy
-      {
-        clientID: googleClientID, // Google client ID
-        clientSecret: googleClientSecret, // Google client secret
-        callbackURL: googleCallbackURL // Google callback URL
-      },
-      async (accessToken, refreshToken, profile, done) => {
-        try {
-          const email =
-            profile.emails && profile.emails[0] && profile.emails[0].value;
-
-          const user = await upsertOAuthUser({
-            provider: 'google',
-            providerId: profile.id,
-            email,
-            displayName: profile.displayName
-          });
-
-          done(null, user);
-        } catch (err) {
-          done(err);
-        }
-      }
-    )
-  );
-} else { //log warning if not configured
+if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
   console.warn(
-    'Google OAuth not configured: set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET' //log warning if not configured
+    'Google OAuth env vars not fully set. GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET are required for real Google login.'
   );
 }
 
-/* gitHub Strategy  */
+//  register strategy as google
+passport.use(
+  'google',
+  new GoogleStrategy(
+    {
+      clientID: googleClientID,
+      clientSecret: googleClientSecret,
+      callbackURL: googleCallbackURL
+    },
+    async (accessToken, refreshToken, profile, done) => {
+      try {
+        const email =
+          profile.emails && profile.emails[0] && profile.emails[0].value;
 
-const githubClientID = process.env.GITHUB_CLIENT_ID; // get from environment variables
-const githubClientSecret = process.env.GITHUB_CLIENT_SECRET; // get from environment variables
+        const user = await upsertOAuthUser({
+          provider: 'google',
+          providerId: profile.id,
+          email,
+          displayName: profile.displayName
+        });
+
+        done(null, user);
+      } catch (err) {
+        done(err);
+      }
+    }
+  )
+);
+
+/*  GitHub Strategy  */
+
+const githubClientID =
+  process.env.GITHUB_CLIENT_ID || 'missing-github-client-id';
+const githubClientSecret =
+  process.env.GITHUB_CLIENT_SECRET || 'missing-github-client-secret';
 const githubCallbackURL =
   process.env.GITHUB_CALLBACK_URL ||
   'http://localhost:3000/auth/github/callback';
 
-console.log('GitHub OAuth Config:', { githubClientID: !!githubClientID, githubClientSecret: !!githubClientSecret });
-
-if (githubClientID && githubClientSecret) {
-  passport.use(
-    new GitHubStrategy(
-      {
-        clientID: githubClientID, // GitHub client ID
-        clientSecret: githubClientSecret, // GitHub client secret
-        callbackURL: githubCallbackURL, // GitHub callback URL
-        scope: ['user:email']
-      },
-      async (accessToken, refreshToken, profile, done) => {
-        try {
-          let email;
-          if (profile.emails && profile.emails.length > 0) {
-            email = profile.emails[0].value;
-          }
-
-          const user = await upsertOAuthUser({
-            provider: 'github',
-            providerId: profile.id,
-            email,
-            displayName: profile.displayName || profile.username
-          });
-
-          done(null, user);
-        } catch (err) {
-          done(err);
-        }
-      }
-    )
-  );
-} else {
+if (!process.env.GITHUB_CLIENT_ID || !process.env.GITHUB_CLIENT_SECRET) {
   console.warn(
-    'GitHub OAuth is not properly configured: set GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET'
+    'GitHub OAuth env vars not fully set. GITHUB_CLIENT_ID / GITHUB_CLIENT_SECRET are required for GitHub login.'
   );
 }
 
-// Serialize and deserialize user for session management
-passport.serializeUser((user, done) => {
-  done(null, user._id);
-});
+//  register strategy as github
+passport.use(
+  'github',
+  new GitHubStrategy(
+    {
+      clientID: githubClientID,
+      clientSecret: githubClientSecret,
+      callbackURL: githubCallbackURL,
+      scope: ['user:email']
+    },
+    async (accessToken, refreshToken, profile, done) => {
+      try {
+        let email;
+        if (profile.emails && profile.emails.length > 0) {
+          email = profile.emails[0].value;
+        }
 
-passport.deserializeUser(async (id, done) => {
-  try {
-    const user = await User.findById(id);
-    done(null, user);
-  } catch (err) {
-    done(err);
-  }
-});
+        const user = await upsertOAuthUser({
+          provider: 'github',
+          providerId: profile.id,
+          email,
+          displayName: profile.displayName || profile.username
+        });
+
+        done(null, user);
+      } catch (err) {
+        done(err);
+      }
+    }
+  )
+);
 
 module.exports = passport;
