@@ -1,433 +1,474 @@
 <%- include('./partials/header') %>
 <%- include('./partials/main_nav') %>
 
-<div class="container py-5">
+<div class="calendar-page container-fluid py-4">
 
-  <!-- Header -->
-  <div class="d-flex align-items-center mb-4">
-    <img src="/Asset/images/logo.PNG"
-         alt="Logo"
-         style="height:60px; width:auto;"
-         class="me-3">
-    <div>
-      <h1 class="mb-1">Schedule</h1>
-      <p class="text-muted mb-0">Check your tasks for each day of the week.</p>
-    </div>
-  </div>
+  <!-- Page header -->
+  <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
 
-  <!-- Weekly summary cards -->
-  <div class="row mb-4" id="weekCards"></div>
+    <!--Left view: month + navigation -->
+    <div class="d-flex align-items-center gap-3">
+      <button class="icon-button" id="prevRangeBtn" type="button" aria-label="Previous range">
+        <i class="fas fa-chevron-left"></i>
+      </button>
 
-  <!-- Day selector -->
-  <div class="mb-3">
-    <label for="daySelect" class="form-label fw-semibold">Select a day</label>
-    <select class="form-select" id="daySelect">
-      <option disabled selected>Choose a day...</option>
-      <option value="monday">Monday</option>
-      <option value="tuesday">Tuesday</option>
-      <option value="wednesday">Wednesday</option>
-      <option value="thursday">Thursday</option>
-      <option value="friday">Friday</option>
-      <option value="saturday">Saturday</option>
-      <option value="sunday">Sunday</option>
-    </select>
-  </div>
-
-  <!-- Tasks table -->
-  <div class="card shadow-sm mb-4">
-    <div class="card-body">
-      <div class="d-flex align-items-center justify-content-between mb-3">
-        <h5 class="mb-0">Tasks</h5>
-        <button id="addTaskBtn" type="button" class="btn btn-primary btn-sm">
-          <i class="fa-solid fa-plus"></i> Add Task
+      <div class="d-flex flex-column">
+        <span id="calendarMonthLabel" class="calendar-month-label">May 2025</span>
+        <button class="link-button text-muted" id="todayBtn" type="button">
+          Today
         </button>
       </div>
 
-      <div class="table-responsive">
-        <table class="table table-hover align-middle">
-          <thead>
-            <tr>
-              <th>Time</th>
-              <th>Title</th>
-              <th>Category</th>
-              <th>Color</th>
-              <th>Notes</th>
-              <th class="text-end">Actions</th>
-            </tr>
-          </thead>
-          <tbody id="tasksBody"></tbody>
-        </table>
+      <button class="icon-button" id="nextRangeBtn" type="button" aria-label="Next range">
+        <i class="fas fa-chevron-right"></i>
+      </button>
+    </div>
+
+    <!-- Right view: view switch + new event -->
+    <div class="d-flex align-items-center gap-3 flex-wrap">
+
+      <div class="view-switch btn-group btn-group-sm" role="group" aria-label="Calendar view">
+        <button type="button" class="btn view-btn" data-view="1w">1 Week</button>
+        <button type="button" class="btn view-btn active" data-view="2w">2 Weeks</button>
+        <button type="button" class="btn view-btn" data-view="month">1 Month</button>
       </div>
 
-      <p id="emptyText" class="text-muted mt-2 d-none">
-        No tasks for this day.
-      </p>
+      <button id="addEventBtn" type="button" class="btn btn-primary btn-sm">
+        <i class="fas fa-plus me-1"></i> New Event
+      </button>
     </div>
+  </div>
+
+  <!-- Calendar grid -->
+  <div id="calendarGrid" class="calendar-grid mb-3">
+  <! -- use javascript to populate fill -->
+  </div>
+
+  <p class="small text-muted mb-0">
+    This is a shared calendar. Events are stored on MongoDB and visible to all users, so everyone
+    has the same schedule.
+  </p>
+</div>
+
+<!-- Event modal -->
+<div class="modal fade" id="eventModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <form class="modal-content" id="eventForm">
+      <div class="modal-header">
+        <h5 class="modal-title" id="eventModalTitle">New Event</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body">
+        <input type="hidden" id="eventId">
+
+        <div class="mb-3">
+          <label for="eventTitle" class="form-label">Title</label>
+          <input type="text" id="eventTitle" class="form-control" placeholder="Meeting with client" required>
+        </div>
+
+        <div class="row g-3">
+          <div class="col-md-6 mb-3 mb-md-0">
+            <label for="eventDate" class="form-label">Date</label>
+            <input type="date" id="eventDate" class="form-control" required>
+          </div>
+          <div class="col-md-6">
+            <label for="eventTime" class="form-label">Time</label>
+            <input type="time" id="eventTime" class="form-control">
+          </div>
+        </div>
+
+        <div class="row g-3 mt-1">
+          <div class="col-md-6 mb-3 mb-md-0">
+            <label for="eventOwner" class="form-label">Who is this for?</label>
+            <input
+              type="text"
+              id="eventOwner"
+              class="form-control"
+              placeholder="e.g. Design team"
+              value="<%= user ? user.email : '' %>">
+          </div>
+
+          <div class="col-md-6">
+            <label for="eventTags" class="form-label">Tags (comma‑separated)</label>
+            <input
+              type="text"
+              id="eventTags"
+              class="form-control"
+              placeholder="Lecture, Tutorial, Case study">
+          </div>
+        </div>
+
+        <div class="mt-3">
+          <label for="eventNotes" class="form-label">Notes (optional)</label>
+          <textarea id="eventNotes" class="form-control" rows="2"></textarea>
+        </div>
+      </div>
+
+      <div class="modal-footer d-flex justify-content-between">
+        <button type="button" class="btn btn-outline-danger d-none" id="deleteEventBtn">
+          Delete
+        </button>
+
+        <div class="ms-auto">
+          <button type="button" class="btn btn-outline-secondary me-2" data-bs-dismiss="modal">
+            Cancel
+          </button>
+          <button type="submit" class="btn btn-primary">
+            Save
+          </button>
+        </div>
+      </div>
+    </form>
   </div>
 </div>
 
 <script>
-// Seed demo data (used to pre-populate localStorage once if empty)
-var scheduleData = {
-  monday: [
-    { time: '09:00', title: 'Networking Lab',     category: 'Academic', color: '#4f46e5', notes: 'Finish lab work' },
-    { time: '14:00', title: 'Gym – Pull Day',     category: 'Personal', color: '#16a34a', notes: '' },
-    { time: '18:00', title: 'Work Shift',         category: 'Work',     color: '#dc2626', notes: '' }
-  ],
-  tuesday: [
-    { time: '10:00', title: 'PlanSimple Meeting', category: 'Academic', color: '#4f46e5', notes: 'Group check-in' },
-    { time: '16:30', title: 'Groceries',          category: 'Personal', color: '#16a34a', notes: '' }
-  ],
-  wednesday: [
-    { time: '08:30', title: '5K Run',             category: 'Personal', color: '#16a34a', notes: '' },
-    { time: '11:00', title: 'Cryptography',       category: 'Academic', color: '#4f46e5', notes: '' }
-  ],
-  thursday: [],
-  friday: [
-    { time: '09:30', title: 'Team Check-in',      category: 'Academic', color: '#4f46e5', notes: '' }
-  ],
-  saturday: [],
-  sunday: []
-};
+  // Everything Schedule view in this blocK
+  window.addEventListener('DOMContentLoaded', function () {
+    //  DOM references 
+    const calendarGrid   = document.getElementById('calendarGrid');
+    const monthLabel     = document.getElementById('calendarMonthLabel');
+    const todayBtn       = document.getElementById('todayBtn');
+    const prevRangeBtn   = document.getElementById('prevRangeBtn');
+    const nextRangeBtn   = document.getElementById('nextRangeBtn');
+    const viewButtons    = document.querySelectorAll('.view-btn');
+    const addEventBtn    = document.getElementById('addEventBtn');
 
-// simple Schedule — working CRUD app using localStorage ===
-// replaced demo only code with working Edit/Delete buttons.
+    // Modal + form ref
+    const eventModalEl   = document.getElementById('eventModal');
+    const eventModal     = eventModalEl && window.bootstrap
+                            ? window.bootstrap.Modal.getOrCreateInstance(eventModalEl)
+                            : null;
+    const eventForm      = document.getElementById('eventForm');
+    const eventModalTitle= document.getElementById('eventModalTitle');
+    const deleteEventBtn = document.getElementById('deleteEventBtn');
 
-(function() {
-  // DOM handlers & elements 
-  var daySelect  = document.getElementById('daySelect');
-  var tasksBody  = document.getElementById('tasksBody');
-  var emptyText  = document.getElementById('emptyText');
-  var weekCards  = document.getElementById('weekCards');
+    // Form fields
+    const inputId        = document.getElementById('eventId');
+    const inputTitle     = document.getElementById('eventTitle');
+    const inputDate      = document.getElementById('eventDate');
+    const inputTime      = document.getElementById('eventTime');
+    const inputOwner     = document.getElementById('eventOwner');
+    const inputTags      = document.getElementById('eventTags');
+    const inputNotes     = document.getElementById('eventNotes');
 
-  // Add Task modal & form
-  var scheduleTaskModalEl = document.getElementById('scheduleTaskModal');
-  var scheduleTaskForm = document.getElementById('scheduleTaskForm');
-  var addTaskBtn = document.getElementById('addTaskBtn');
-  var modal = null;
-  if (window.bootstrap && scheduleTaskModalEl) {
-    modal = bootstrap.Modal.getOrCreateInstance(scheduleTaskModalEl);
-  }
-
-  // Constants & helpers 
-  var STORAGE_KEY = 'plansimple.tasks';
-  var daySeq = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
-  var dayNames = {
-    monday: 'Monday',
-    tuesday: 'Tuesday',
-    wednesday: 'Wednesday',
-    thursday: 'Thursday',
-    friday: 'Friday',
-    saturday: 'Saturday',
-    sunday: 'Sunday'
-  };
-
-  function readAllTasks() {
-    try {
-      var raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return [];
-      var arr = JSON.parse(raw);
-      return Array.isArray(arr) ? arr : [];
-    } catch(e) {
-      console.warn('Failed to read tasks from storage', e);
-      return [];
-    }
-  }
-  function writeAllTasks(arr) {
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(arr || [])); }
-    catch(e) { console.warn('Failed to write tasks', e); }
-  }
-
-  function pad2(n){ return (n<10 ? '0' : '') + n; }
-  function fmtDate(d) { return d.getFullYear() + '-' + pad2(d.getMonth()+1) + '-' + pad2(d.getDate()); }
-
-  function dayIndex(dayKey) { return {sunday:0,monday:1,tuesday:2,wednesday:3,thursday:4,friday:5,saturday:6}[dayKey]; }
-  function toDayKey(dateStr){
-    var d = new Date(dateStr + 'T00:00:00');
-    var n = d.getDay(); // 0=Sun... 6=Sat 
-    return ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'][n] || 'monday';
-  }
-  function nextDateForDay(dayKey){
-    var target = dayIndex(dayKey);
-    var d = new Date();
-    d.setHours(0,0,0,0);
-    var diff = (target - d.getDay() + 7) % 7;
-    if (diff === 0) diff = 7; // next occurrence
-    d.setDate(d.getDate() + diff);
-    return d;
-  }
-
-  function badgeClass(category) {
-    if (category === 'Work') return 'badge bg-danger-subtle text-danger';
-    if (category === 'Personal') return 'badge bg-success-subtle text-success';
-    return 'badge bg-primary-subtle text-primary';
-  }
-  function esc(s) {
-    return String(s == null ? '' : s)
-      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
-      .replace(/>/g,'&gt;').replace(/"/g,'&quot;')
-      .replace(/'/g,'&#039;');
-  }
-  function sortByStart(a,b) { return String(a.start||'').localeCompare(String(b.start||'')); }
-
-  // Seed demo tasks into storage once for first-time users.
-  function seedFromScheduleDataIfEmpty() {
-    var existing = readAllTasks();
-    if (existing.length) return existing;
-
-    var seeded = [];
-    for (var k=0; k<daySeq.length; k++) {
-      var key = daySeq[k];
-      var arr = (window.scheduleData && window.scheduleData[key]) || [];
-      var baseDate = fmtDate(nextDateForDay(key));
-      for (var i=0; i<arr.length; i++) {
-        var t = arr[i] || {};
-        seeded.push({
-          id: Date.now() + Math.floor(Math.random() * 1e6),
-          title: t.title || '(Untitled)',
-          date: baseDate,
-          start: t.time || '',
-          end: '',
-          category: t.category || 'Personal',
-          color: t.color || '#0d6efd',
-          notes: t.notes || ''
-        });
-      }
-    }
-    writeAllTasks(seeded);
-    return seeded;
-  }
-
-  var allTasks = seedFromScheduleDataIfEmpty();
-
-  // Rendering 
-  function renderWeekCards() {
-    weekCards.innerHTML = '';
-    for (var k=0; k<daySeq.length; k++) {
-      var key = daySeq[k];
-      var count = allTasks.filter(function(t){ return toDayKey(t.date) === key; }).length;
-
-      var col = document.createElement('div');
-      col.className = 'col-6 col-md-3 mb-3';
-
-      var html = '';
-      html += '<div class="card shadow-sm h-100">';
-      html += '  <div class="card-body text-center py-3">';
-      html += '    <h6 class="mb-1">' + dayNames[key] + '</h6>';
-      html += '    <p class="text-muted mb-0"><strong>' + count + '</strong> task' + (count === 1 ? '' : 's') + '</p>';
-      html += '  </div>';
-      html += '</div>';
-
-      col.innerHTML = html;
-      weekCards.appendChild(col);
-    }
-  }
-
-  function renderDay(dayKey) {
-    tasksBody.innerHTML = '';
-    var dayTasks = allTasks
-      .filter(function(t){ return toDayKey(t.date) === dayKey; })
-      .sort(sortByStart);
-
-    if (!dayTasks.length) {
-      emptyText.classList.remove('d-none');
+    if (!calendarGrid) {
+      // Not on schedule page
       return;
     }
-    emptyText.classList.add('d-none');
 
-    for (var i=0; i<dayTasks.length; i++) {
-      var t = dayTasks[i];
-      var row = document.createElement('tr');
-      var rowHtml = '';
-      rowHtml += '<td>' + esc(t.start || '') + '</td>';
-      rowHtml += '<td>' + esc(t.title || '') + '</td>';
-      rowHtml += '<td><span class="' + badgeClass(t.category) + '">' + esc(t.category || '') + '</span></td>';
-      rowHtml += '<td>';
-      rowHtml += '  <span style="background:' + esc(t.color || '#0d6efd') + '; display:inline-block; width:14px; height:14px; border-radius:50%; border:1px solid #ddd;"></span>';
-      rowHtml += '  <span class="text-muted ms-1">' + esc(t.color || '#0d6efd') + '</span>';
-      rowHtml += '</td>';
-      rowHtml += '<td>' + (t.notes && t.notes.trim() !== '' ? esc(t.notes) : '<span class="text-muted">—</span>') + '</td>';
-      rowHtml += '<td class="text-end">';
-      rowHtml += '  <button class="btn btn-sm btn-outline-secondary me-1" data-action="edit" data-id="' + esc(t.id) + '">Edit</button>';
-      rowHtml += '  <button class="btn btn-sm btn-outline-danger" data-action="delete" data-id="' + esc(t.id) + '">Delete</button>';
-      rowHtml += '</td>';
-      row.innerHTML = rowHtml;
-      tasksBody.appendChild(row);
+    // Small date helpER
+    const STORAGE_KEY = 'plansimple.sharedCalendar.events';
+
+    function startOfWeek(date) {
+      const d = new Date(date);
+      d.setHours(0, 0, 0, 0);
+      const day = d.getDay(); // 0 = Sunday
+      d.setDate(d.getDate() - day);
+      return d;
     }
-  }
 
-  function rerender() {
-    renderWeekCards();
-    renderDay(daySelect.value || 'monday');
-  }
+    function addDays(date, days) {
+      const d = new Date(date);
+      d.setDate(d.getDate() + days);
+      return d;
+    }
 
-  // modal Events binding task handlers
-  function clearForm() {
-    scheduleTaskForm.reset();
-    document.getElementById('sTaskId').value = '';
-    var d = nextDateForDay(daySelect.value || 'monday');
-    document.getElementById('sTaskDate').value = fmtDate(d);
-    document.getElementById('sTaskColor').value = '#0d6efd';
-    document.getElementById('scheduleModalTitle').textContent = 'Add Task';
-  }
+    function isoDate(date) {
+      return date.toISOString().slice(0, 10);
+    }
 
-  function fillFormFromTask(t) {
-    document.getElementById('sTaskId').value = t.id;
-    document.getElementById('sTaskTitle').value = t.title || '';
-    document.getElementById('sTaskDate').value = t.date || '';
-    document.getElementById('sStartTime').value = t.start || '';
-    document.getElementById('sEndTime').value = t.end || '';
-    document.getElementById('sTaskCategory').value = t.category || 'Personal';
-    document.getElementById('sTaskColor').value = t.color || '#0d6efd';
-    document.getElementById('sTaskNotes').value = t.notes || '';
-    document.getElementById('scheduleModalTitle').textContent = 'Edit Task';
-  }
+    function daysInMonth(date) {
+      return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
+    }
 
-  function openCreateModal() {
-    clearForm();
-    if (modal) modal.show();
-  }
-  function openEditModal(taskId) {
-    var t = allTasks.find(function(x){ return String(x.id) === String(taskId); });
-    if (!t) return;
-    fillFormFromTask(t);
-    if (modal) modal.show();
-  }
+    function monthLabelText(start, end) {
+      const sameMonth = start.getMonth() === end.getMonth() &&
+                        start.getFullYear() === end.getFullYear();
+      const full = { month: 'long', year: 'numeric' };
+      if (sameMonth) {
+        return start.toLocaleDateString(undefined, full);
+      }
+      const short = { month: 'short' };
+      return start.toLocaleDateString(undefined, short) +
+             ' – ' +
+             end.toLocaleDateString(undefined, full);
+    }
 
-  // Events binding task handlers
-  if (addTaskBtn) {
-    addTaskBtn.addEventListener('click', function(e){
-      e.preventDefault();
-      openCreateModal();
-    });
-  }
+    // Load & save events ON localStorage
+    function loadEvents() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return [];
+        const parsed = JSON.parse(raw);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch (err) {
+        console.warn('Could not load events:', err);
+        return [];
+      }
+    }
 
-  if (scheduleTaskForm) {
-    scheduleTaskForm.addEventListener('submit', function(e){
-      e.preventDefault();
-      var id = document.getElementById('sTaskId').value.trim();
-      var payload = {
-        title: document.getElementById('sTaskTitle').value.trim(),
-        date:  document.getElementById('sTaskDate').value,
-        start: document.getElementById('sStartTime').value,
-        end:   document.getElementById('sEndTime').value,
-        category: document.getElementById('sTaskCategory').value,
-        color: document.getElementById('sTaskColor').value || '#0d6efd',
-        notes: document.getElementById('sTaskNotes').value.trim()
+    function saveEvents() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(events));
+    }
+
+    //  In‑memory state 
+    let events   = loadEvents();
+    let viewMode = '2w'; // '1w' | '2w' | 'month'
+    let anchor   = new Date(); //SET to today initially
+
+    // Calendar rendering 
+    function currentRange() {
+      if (viewMode === 'month') {
+        const firstOfMonth = new Date(anchor.getFullYear(), anchor.getMonth(), 1);
+        const total = daysInMonth(firstOfMonth);
+        const start = firstOfMonth;
+        const end = addDays(start, total - 1);
+        return { start, totalDays: total, end };
+      }
+
+      const start = startOfWeek(anchor);
+      const totalDays = viewMode === '1w' ? 7 : 14;
+      const end = addDays(start, totalDays - 1);
+      return { start, totalDays, end };
+    }
+
+    function renderCalendar() {
+      const { start, totalDays, end } = currentRange();
+      monthLabel.textContent = monthLabelText(start, end);
+      calendarGrid.innerHTML = '';
+      calendarGrid.style.gridTemplateColumns = 'repeat(7, minmax(0, 1fr))';
+
+      const todayIso = isoDate(new Date());
+
+      for (let i = 0; i < totalDays; i++) {
+        const dayDate = addDays(start, i);
+        const dayIso  = isoDate(dayDate);
+        const dayName = dayDate.toLocaleDateString(undefined, { weekday: 'short' });
+        const dayNum  = dayDate.getDate();
+
+        // Outer day cell
+        const dayEl = document.createElement('div');
+        dayEl.className = 'calendar-day';
+        if (dayIso === todayIso) {
+          dayEl.classList.add('is-today');
+        }
+
+        // Day header
+        const header = document.createElement('div');
+        header.className = 'calendar-day-header';
+
+        const left = document.createElement('div');
+        left.className = 'calendar-day-header-main';
+
+        const nameSpan = document.createElement('span');
+        nameSpan.className = 'calendar-day-name';
+        nameSpan.textContent = dayName.toUpperCase();
+
+        const numSpan = document.createElement('span');
+        numSpan.className = 'calendar-day-number';
+        numSpan.textContent = String(dayNum).padStart(2, '0');
+
+        left.appendChild(nameSpan);
+        left.appendChild(numSpan);
+
+        header.appendChild(left);
+        dayEl.appendChild(header);
+
+        // Events container
+        const eventsCol = document.createElement('div');
+        eventsCol.className = 'calendar-events';
+
+        const dayEvents = events
+          .filter(e => e.date === dayIso)
+          .sort((a, b) => (a.time || '').localeCompare(b.time || ''));
+
+        dayEvents.forEach(ev => {
+          const card = document.createElement('button');
+          card.type = 'button';
+          card.className = 'calendar-event';
+          card.dataset.id = ev.id;
+
+          const meta = document.createElement('div');
+          meta.className = 'event-meta';
+
+          if (ev.time) {
+            const t = document.createElement('span');
+            t.className = 'event-time';
+            t.textContent = ev.time;
+            meta.appendChild(t);
+          }
+
+          if (ev.tags && ev.tags.length) {
+            ev.tags.forEach(tag => {
+              const tagEl = document.createElement('span');
+              tagEl.className = 'event-tag';
+              tagEl.textContent = tag;
+              meta.appendChild(tagEl);
+            });
+          }
+
+          card.appendChild(meta);
+
+          const title = document.createElement('div');
+          title.className = 'event-title';
+          title.textContent = ev.title;
+          card.appendChild(title);
+
+          if (ev.owner) {
+            const owner = document.createElement('div');
+            owner.className = 'event-owner';
+            owner.textContent = ev.owner;
+            card.appendChild(owner);
+          }
+
+          card.addEventListener('click', function () {
+            openForEdit(ev.id);
+          });
+
+          eventsCol.appendChild(card);
+        });
+
+        const addLink = document.createElement('button');
+        addLink.type = 'button';
+        addLink.className = 'add-event-link';
+        addLink.textContent = '+ Add';
+        addLink.addEventListener('click', function () {
+          openForCreate(dayIso);
+        });
+        eventsCol.appendChild(addLink);
+
+        dayEl.appendChild(eventsCol);
+        calendarGrid.appendChild(dayEl);
+      }
+    }
+
+    //Modal open helpers
+    function fillForm(ev) {
+      inputId.value    = ev ? ev.id : '';
+      inputTitle.value = ev ? ev.title : '';
+      inputDate.value  = ev ? ev.date : isoDate(anchor);
+      inputTime.value  = ev ? ev.time || '' : '';
+      inputOwner.value = ev ? (ev.owner || '') : inputOwner.value;
+      inputTags.value  = ev && ev.tags ? ev.tags.join(', ') : '';
+      inputNotes.value = ev ? (ev.notes || '') : '';
+    }
+
+    function openForCreate(preselectedDateIso) {
+      const today = preselectedDateIso || isoDate(new Date());
+      const newEv = {
+        id: '',
+        title: '',
+        date: today,
+        time: '',
+        owner: inputOwner.value || '<%= user ? user.email : "" %>',
+        tags: [],
+        notes: ''
       };
 
-      if (!payload.title || !payload.date) {
-        alert('Title and Date are required.');
+      deleteEventBtn.classList.add('d-none');
+      eventModalTitle.textContent = 'New Event';
+      fillForm(newEv);
+      if (eventModal) eventModal.show();
+    }
+
+    function openForEdit(id) {
+      const ev = events.find(e => e.id === id);
+      if (!ev) return;
+
+      deleteEventBtn.classList.remove('d-none');
+      eventModalTitle.textContent = 'Edit Event';
+      fillForm(ev);
+      if (eventModal) eventModal.show();
+    }
+
+
+    //Form submit+ delete
+    eventForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+
+      const id = inputId.value || String(Date.now());
+      const title = inputTitle.value.trim();
+      const date = inputDate.value;
+      const time = inputTime.value;
+      const owner = inputOwner.value.trim();
+      const tags = inputTags.value
+        .split(',')
+        .map(t => t.trim())
+        .filter(Boolean);
+      const notes = inputNotes.value.trim();
+
+      if (!title || !date) {
+        alert('Please provide at least a title and a date.');
         return;
       }
 
-      if (id) {
-        var idx = allTasks.findIndex(function(x){ return String(x.id) === String(id); });
-        if (idx !== -1) {
-          allTasks[idx] = Object.assign({}, allTasks[idx], payload);
-        }
+      const existingIdx = events.findIndex(e => e.id === id);
+      const newEvent = { id, title, date, time, owner, tags, notes };
+
+      if (existingIdx >= 0) {
+        events[existingIdx] = newEvent;
       } else {
-        payload.id = Date.now();
-        allTasks.push(payload);
+        events.push(newEvent);
       }
 
-      writeAllTasks(allTasks);
-      if (modal) modal.hide();
-      rerender();
-    });
-  }
 
-  if (tasksBody) {
-    tasksBody.addEventListener('click', function(e){
-      var btn = e.target.closest('button[data-action]');
-      if (!btn) return;
-      var id = btn.getAttribute('data-id');
-      var action = btn.getAttribute('data-action');
-      if (action === 'edit') {
-        openEditModal(id);
-      } else if (action === 'delete') {
-        if (confirm('Delete this task?')) {
-          allTasks = allTasks.filter(function(x){ return String(x.id) !== String(id); });
-          writeAllTasks(allTasks);
-          rerender();
-        }
+      saveEvents();
+      if (eventModal) eventModal.hide();
+      renderCalendar();
+    });
+
+    deleteEventBtn.addEventListener('click', function () {
+      const id = inputId.value;
+      if (!id) return;
+
+      events = events.filter(e => e.id !== id);
+      saveEvents();
+      if (eventModal) eventModal.hide();
+      renderCalendar();
+    });
+
+    //Navigation buttons
+    function shiftRange(direction) {
+      if (viewMode === 'month') {
+        anchor = new Date(anchor.getFullYear(), anchor.getMonth() + direction, 15);
+      } else {
+        const weeks = viewMode === '1w' ? 1 : 2;
+        anchor = addDays(anchor, direction * weeks * 7);
       }
-    });
-  }
+      renderCalendar();
+    }
 
-  if (daySelect) {
-    daySelect.addEventListener('change', function(e) {
-      renderDay(e.target.value);
+    prevRangeBtn.addEventListener('click', function () {
+      shiftRange(-1);
     });
-  }
 
-  // Initial render
-  daySelect.value = 'monday';
-  rerender();
-})();
+    nextRangeBtn.addEventListener('click', function () {
+      shiftRange(1);
+    });
+
+    todayBtn.addEventListener('click', function () {
+      anchor = new Date();
+      renderCalendar();
+    });
+
+    addEventBtn.addEventListener('click', function () {
+      openForCreate(isoDate(anchor));
+    });
+
+    viewButtons.forEach(btn => {
+      btn.addEventListener('click', function () {
+        viewButtons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        viewMode = btn.dataset.view;
+        renderCalendar();
+      });
+    });
+    // Initial render
+    renderCalendar();
+  });
 </script>
 
-<!-- Add/Edit Task modal for schedule -->
-<div class="modal fade" id="scheduleTaskModal" tabindex="-1" aria-labelledby="scheduleTaskLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title"><span id="scheduleModalTitle">Add Task</span></h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-
-      <form id="scheduleTaskForm">
-        <input type="hidden" id="sTaskId" />
-
-        <div class="modal-body">
-          <div class="mb-3">
-            <label for="sTaskTitle" class="form-label">Title</label>
-            <input type="text" class="form-control" id="sTaskTitle" required>
-          </div>
-
-          <div class="row">
-            <div class="col-md-6 mb-3">
-              <label for="sTaskDate" class="form-label">Date</label>
-              <input type="date" class="form-control" id="sTaskDate" required>
-            </div>
-            <div class="col-md-3 mb-3">
-              <label for="sStartTime" class="form-label">Start</label>
-              <input type="time" class="form-control" id="sStartTime" required>
-            </div>
-            <div class="col-md-3 mb-3">
-              <label for="sEndTime" class="form-label">End</label>
-              <input type="time" class="form-control" id="sEndTime">
-            </div>
-          </div>
-
-          <div class="row">
-            <div class="col-md-6 mb-3">
-              <label for="sTaskCategory" class="form-label">Category</label>
-              <select class="form-select" id="sTaskCategory">
-                <option>Personal</option>
-                <option>Work</option>
-                <option>Academic</option>
-              </select>
-            </div>
-            <div class="col-md-6 mb-3">
-              <label for="sTaskColor" class="form-label">Color</label>
-              <input type="color" class="form-control form-control-color" id="sTaskColor" value="#0d6efd">
-            </div>
-          </div>
-
-          <div class="mb-3">
-            <label for="sTaskNotes" class="form-label">Notes</label>
-            <textarea class="form-control" id="sTaskNotes" rows="3"></textarea>
-          </div>
-        </div>
-
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-          <button type="submit" class="btn btn-primary">Save</button>
-        </div>
-      </form>
-    </div>
-  </div>
-</div>
 
 <%- include('./partials/footer') %>
