@@ -1,8 +1,9 @@
 <%- include('./partials/header') %>
 <%- include('./partials/main_nav') %>
 
-<div class="container mt-5">
+<div class="container py-5">
 
+  <!-- Header -->
   <div class="d-flex align-items-center mb-4">
     <img src="/Asset/images/logo.PNG"
          alt="Logo"
@@ -14,8 +15,10 @@
     </div>
   </div>
 
+  <!-- Weekly summary cards -->
   <div class="row mb-4" id="weekCards"></div>
 
+  <!-- Day selector -->
   <div class="mb-3">
     <label for="daySelect" class="form-label fw-semibold">Select a day</label>
     <select class="form-select" id="daySelect">
@@ -30,14 +33,15 @@
     </select>
   </div>
 
-  <div class="card shadow-sm">
+  <!-- Tasks table -->
+  <div class="card shadow-sm mb-4">
     <div class="card-body">
-    <div class="d-flex align-items-center justify-content-between mb-3">
-      <h5 class="mb-0">Tasks</h5>
-      <button id="addTaskBtn" type="button" class="btn btn-primary btn-sm">
-        <i class="fa-solid fa-plus"></i> Add Task
-      </button>
-    </div>
+      <div class="d-flex align-items-center justify-content-between mb-3">
+        <h5 class="mb-0">Tasks</h5>
+        <button id="addTaskBtn" type="button" class="btn btn-primary btn-sm">
+          <i class="fa-solid fa-plus"></i> Add Task
+        </button>
+      </div>
 
       <div class="table-responsive">
         <table class="table table-hover align-middle">
@@ -65,32 +69,32 @@
 <script>
 // Seed demo data (used to pre-populate localStorage once if empty)
 var scheduleData = {
-    monday: [
-      { time: '09:00', title: 'Networking Lab',     category: 'Academic', color: '#4f46e5', notes: 'Finish lab work' },
-      { time: '14:00', title: 'Gym – Pull Day',     category: 'Personal', color: '#16a34a', notes: '' },
-      { time: '18:00', title: 'Work Shift',         category: 'Work',     color: '#dc2626', notes: '' }
-    ],
-    tuesday: [
-      { time: '10:00', title: 'PlanSimple Meeting', category: 'Academic', color: '#4f46e5', notes: 'Group check-in' },
-      { time: '16:30', title: 'Groceries',          category: 'Personal', color: '#16a34a', notes: '' }
-    ],
-    wednesday: [
-      { time: '08:30', title: '5K Run',             category: 'Personal', color: '#16a34a', notes: '' },
-      { time: '11:00', title: 'Cryptography',       category: 'Academic', color: '#4f46e5', notes: '' }
-    ],
-    thursday: [],
-    friday: [
-      { time: '09:30', title: 'Team Check-in',      category: 'Academic', color: '#4f46e5', notes: '' }
-    ],
-    saturday: [],
-    sunday: []
-  };
+  monday: [
+    { time: '09:00', title: 'Networking Lab',     category: 'Academic', color: '#4f46e5', notes: 'Finish lab work' },
+    { time: '14:00', title: 'Gym – Pull Day',     category: 'Personal', color: '#16a34a', notes: '' },
+    { time: '18:00', title: 'Work Shift',         category: 'Work',     color: '#dc2626', notes: '' }
+  ],
+  tuesday: [
+    { time: '10:00', title: 'PlanSimple Meeting', category: 'Academic', color: '#4f46e5', notes: 'Group check-in' },
+    { time: '16:30', title: 'Groceries',          category: 'Personal', color: '#16a34a', notes: '' }
+  ],
+  wednesday: [
+    { time: '08:30', title: '5K Run',             category: 'Personal', color: '#16a34a', notes: '' },
+    { time: '11:00', title: 'Cryptography',       category: 'Academic', color: '#4f46e5', notes: '' }
+  ],
+  thursday: [],
+  friday: [
+    { time: '09:30', title: 'Team Check-in',      category: 'Academic', color: '#4f46e5', notes: '' }
+  ],
+  saturday: [],
+  sunday: []
+};
 
 // simple Schedule — working CRUD app using localStorage ===
 // replaced demo only code with working Edit/Delete buttons.
 
 (function() {
-  //DOM handlers & elements 
+  // DOM handlers & elements 
   var daySelect  = document.getElementById('daySelect');
   var tasksBody  = document.getElementById('tasksBody');
   var emptyText  = document.getElementById('emptyText');
@@ -104,7 +108,8 @@ var scheduleData = {
   if (window.bootstrap && scheduleTaskModalEl) {
     modal = bootstrap.Modal.getOrCreateInstance(scheduleTaskModalEl);
   }
-  //Constants & helpers 
+
+  // Constants & helpers 
   var STORAGE_KEY = 'plansimple.tasks';
   var daySeq = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
   var dayNames = {
@@ -165,7 +170,7 @@ var scheduleData = {
   }
   function sortByStart(a,b) { return String(a.start||'').localeCompare(String(b.start||'')); }
 
-  // Seed demo tasks into storage once for first-time users. so they can see edit funcationality 
+  // Seed demo tasks into storage once for first-time users.
   function seedFromScheduleDataIfEmpty() {
     var existing = readAllTasks();
     if (existing.length) return existing;
@@ -256,11 +261,10 @@ var scheduleData = {
     renderDay(daySelect.value || 'monday');
   }
 
-  // model Events binding task handlers
+  // modal Events binding task handlers
   function clearForm() {
     scheduleTaskForm.reset();
     document.getElementById('sTaskId').value = '';
-    // Prefill date to selected day
     var d = nextDateForDay(daySelect.value || 'monday');
     document.getElementById('sTaskDate').value = fmtDate(d);
     document.getElementById('sTaskColor').value = '#0d6efd';
@@ -318,13 +322,11 @@ var scheduleData = {
       }
 
       if (id) {
-        // Update existing
         var idx = allTasks.findIndex(function(x){ return String(x.id) === String(id); });
         if (idx !== -1) {
           allTasks[idx] = Object.assign({}, allTasks[idx], payload);
         }
       } else {
-        // Create new
         payload.id = Date.now();
         allTasks.push(payload);
       }
@@ -359,12 +361,11 @@ var scheduleData = {
     });
   }
 
-  // 7) Initial render /default 
-  daySelect.value = 'monday';   // default tab
+  // Initial render
+  daySelect.value = 'monday';
   rerender();
 })();
 </script>
-
 
 <!-- Add/Edit Task modal for schedule -->
 <div class="modal fade" id="scheduleTaskModal" tabindex="-1" aria-labelledby="scheduleTaskLabel" aria-hidden="true">

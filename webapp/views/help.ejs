@@ -1,31 +1,69 @@
 <%- include('./partials/header') %>
 <%- include('./partials/main_nav') %>
 
-<div class="container flex-grow-1 mt-4">
-  <h1 class="mb-3">Help & Info</h1>
+<div class="container py-5 flex-grow-1">
 
-  <p class="lead">
-    PlanSimple is a simple daily scheduling app designed to help you organize your tasks throughout the week.
-    Here’s how it works:
-  </p>
+  <div class="mb-4">
+    <h1 class="fw-bold mb-2">Help & Info</h1>
+    <p class="lead text-muted mb-0">
+      PlanSimple is a simple daily scheduling app that helps you organize your tasks throughout the week.
+    </p>
+  </div>
 
-  <h3 class="mt-4">How to Use the App</h3>
-  <ul>
-    <li><strong>Select a Day:</strong> Choose any day of the week to view or edit your schedule.</li>
-    <li><strong>Add a Task:</strong> Use the "Create Task" button (on the homepage) to add a new task with a day, time, description, and color.</li>
-    <li><strong>Edit or Delete:</strong> Tasks can be updated or removed from the schedule at any time.</li>
-    <li><strongDashboard View:</strong> All tasks appear in a simple, easy-to-read layout.</li>
-    <li><strong>Save or Print:</strong> You can save or print your weekly schedule for easy offline access.</li>
-  </ul>
+  <div class="row g-4">
 
-  <h3 class="mt-4">Development Team</h3>
-  <ul>
-    <li><strong>Alex</strong>
-    <li><strong>Mathew</strong> 
-    <li><strong>Sukhman</strong>
-  </ul>
+    <div class="col-md-6">
+      <div class="card shadow-sm border-0 h-100">
+        <div class="card-body">
+          <h3 class="h5 fw-semibold mb-3">How to Use the App</h3>
+          <ul class="text-muted mb-0">
+            <li>
+              <strong>Select a day:</strong> Choose any day of the week on the Schedule page to view or edit your tasks.
+            </li>
+            <li>
+              <strong>Add a task:</strong> Use the <em>Create Task</em> button on the homepage or schedule page
+              to add a new task with a date, time, description, category, and colour.
+            </li>
+            <li>
+              <strong>Edit or delete:</strong> Use the Edit and Delete buttons in the Tasks table to update or remove tasks.
+            </li>
+            <li>
+              <strong>Dashboard view:</strong> The cards at the top show how many tasks you have on each day of the week.
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-6">
+      <div class="card shadow-sm border-0 h-100">
+        <div class="card-body">
+          <h3 class="h5 fw-semibold mb-3">Tips for Staying Organized</h3>
+          <ul class="text-muted mb-0">
+            <li>Use colours to separate academic, work, and personal tasks.</li>
+            <li>Update your schedule at the start or end of each day.</li>
+            <li>Keep notes on tasks that repeat weekly so they’re easy to recreate.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="mt-5">
+    <h3 class="h5 fw-semibold mb-3">Development Team</h3>
+    <div class="card shadow-sm border-0">
+      <div class="card-body">
+        <p class="text-muted mb-2">PlanSimple was developed as part of INFR3120.</p>
+        <ul class="mb-0">
+          <li><strong>Alex</strong></li>
+          <li><strong>Mathew</strong></li>
+          <li><strong>Sukhman</strong></li>
+        </ul>
+      </div>
+    </div>
+  </div>
 
 </div>
 
 <%- include('./partials/footer') %>
-
