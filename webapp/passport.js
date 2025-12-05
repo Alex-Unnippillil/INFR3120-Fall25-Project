@@ -4,21 +4,20 @@ const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const GitHubStrategy = require('passport-github2').Strategy;
 const User = require('./models/User');
 
-//helper to find ./craete a new user or update existing one based on OAuth profile
+// Helper: find existing user or create/link one for OAuth login
 async function upsertOAuthUser({ provider, providerId, email, displayName }) {
   const field = provider + 'Id';
   const query = { [field]: providerId };
 
-  // Try provider ID
+  // 1. Try to find by provider id
   let user = await User.findOne(query);
 
-  //If not found and we have an email , try to find by email
+  // 2. If not found and we have an email, try to find by email to link accounts
   if (!user && email) {
     user = await User.findOne({ email: email.toLowerCase() });
   }
 
   if (user) {
-    // Link provider id if not linked alreadu
     if (!user[field]) {
       user[field] = providerId;
       await user.save();
@@ -26,7 +25,7 @@ async function upsertOAuthUser({ provider, providerId, email, displayName }) {
     return user;
   }
 
-  // create a new user
+  // 3. Create new user
   user = new User({
     email: email ? email.toLowerCase() : `${provider}-${providerId}@example.com`,
     displayName: displayName || email || `${provider} user`,
@@ -38,23 +37,16 @@ async function upsertOAuthUser({ provider, providerId, email, displayName }) {
 }
 
 /*  Google Strategy  */
-
-// Use real env vars in prod; fallback strings avoid crashes for when.env missing
-const googleClientID =
-  process.env.GOOGLE_CLIENT_ID || 'missing-google-client-id';
+// Use real env vars if set; otherwise use dummy values for development/testing
+  process.env.GOOGLE_CLIENT_ID || 'dummy-google-client-id';
 const googleClientSecret =
-  process.env.GOOGLE_CLIENT_SECRET || 'missing-google-client-secret';
+  process.env.GOOGLE_CLIENT_SECRET || 'dummy-google-client-secret';
 const googleCallbackURL =
   process.env.GOOGLE_CALLBACK_URL ||
   'http://localhost:3000/auth/google/callback';
 
-if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
-  console.warn(
-    'Google OAuth env vars not fully set. GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET are required for real Google login.'
-  );
-}
+console.log('Registered Google strategy');
 
-//  register strategy as google
 passport.use(
   'google',
   new GoogleStrategy(
@@ -86,20 +78,15 @@ passport.use(
 /*  GitHub Strategy  */
 
 const githubClientID =
-  process.env.GITHUB_CLIENT_ID || 'missing-github-client-id';
+  process.env.GITHUB_CLIENT_ID || 'test-github-client-id';
 const githubClientSecret =
-  process.env.GITHUB_CLIENT_SECRET || 'missing-github-client-secret';
+  process.env.GITHUB_CLIENT_SECRET || 'test-github-client-secret';
 const githubCallbackURL =
   process.env.GITHUB_CALLBACK_URL ||
   'http://localhost:3000/auth/github/callback';
 
-if (!process.env.GITHUB_CLIENT_ID || !process.env.GITHUB_CLIENT_SECRET) {
-  console.warn(
-    'GitHub OAuth env vars not fully set. GITHUB_CLIENT_ID / GITHUB_CLIENT_SECRET are required for GitHub login.'
-  );
-}
+console.log('Registered GitHub strategy');
 
-//  register strategy as github
 passport.use(
   'github',
   new GitHubStrategy(
@@ -131,4 +118,5 @@ passport.use(
   )
 );
 
+// Export the configured passport instance
 module.exports = passport;
