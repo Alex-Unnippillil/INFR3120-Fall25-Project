@@ -2,6 +2,7 @@
 
 A daily schedule app focused on productivity. Plan, organize, and track tasks across the week with a clear, structured view of each day.
 
+https://p8idfcynd5.us-east-1.awsapprunner.com/
 ---
 
 ## Table of Contents
