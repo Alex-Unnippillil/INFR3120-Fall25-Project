@@ -68,6 +68,7 @@ app.use(
 
 // Initialize Passport
 app.use(passport.initialize());
+app.use(passport.session());
 
 // Expose user to all views
 app.use(function (req, res, next) {

@@ -43,6 +43,8 @@ const googleCallbackURL =
   process.env.GOOGLE_CALLBACK_URL || // get from environment variables
   'http://localhost:3000/auth/google/callback'; // default callback URL
 
+console.log('Google OAuth Config:', { googleClientID: !!googleClientID, googleClientSecret: !!googleClientSecret });
+
 if (googleClientID && googleClientSecret) {//check if credentials are set
   passport.use(
     new GoogleStrategy( /// use Google OAuth strategy
@@ -84,6 +86,8 @@ const githubCallbackURL =
   process.env.GITHUB_CALLBACK_URL ||
   'http://localhost:3000/auth/github/callback';
 
+console.log('GitHub OAuth Config:', { githubClientID: !!githubClientID, githubClientSecret: !!githubClientSecret });
+
 if (githubClientID && githubClientSecret) {
   passport.use(
     new GitHubStrategy(
@@ -119,4 +123,19 @@ if (githubClientID && githubClientSecret) {
     'GitHub OAuth is not properly configured: set GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET'
   );
 }
+
+// Serialize and deserialize user for session management
+passport.serializeUser((user, done) => {
+  done(null, user._id);
+});
+
+passport.deserializeUser(async (id, done) => {
+  try {
+    const user = await User.findById(id);
+    done(null, user);
+  } catch (err) {
+    done(err);
+  }
+});
+
 module.exports = passport;
