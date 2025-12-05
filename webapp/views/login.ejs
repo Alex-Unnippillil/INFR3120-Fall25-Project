@@ -8,6 +8,19 @@
     <div class="alert alert-danger"><%= error %></div>
   <% } %>
 
+  
+  <!-- Google- GitHub buttons -->  
+  <div class="mb-3">
+    <a class="btn btn-outline-dark me-2" href="/auth/google">
+      <i class="fab fa-google me-1"></i> Sign in with Google
+    </a>
+    <a class="btn btn-outline-dark" href="/auth/github">
+      <i class="fab fa-github me-1"></i> Sign in with GitHub
+    </a>
+  </div>
+
+  <hr> <!-- separator -->
+
   <form action="/login" method="POST" class="mt-3">
 
     <div class="mb-3">

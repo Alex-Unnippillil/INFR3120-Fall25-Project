@@ -56,7 +56,15 @@
 
           <!-- USER LOGGED IN -->
           <li class="nav-item">
-            <span class="nav-link disabled">Hello, <%= user.email %></span>
+            <a class="nav-link d-flex align-items-center" href="/account">
+              <% if (user && user.avatarUrl) { %>
+                <img src="<%= user.avatarUrl %>"
+                    alt="Avatar"
+                    class="rounded-circle me-2"
+                    style="height:24px; width:24px; object-fit:cover;">
+              <% } %>
+              Hello, <%= user.displayName || user.email %>
+            </a>
           </li>
 
           <li class="nav-item">
