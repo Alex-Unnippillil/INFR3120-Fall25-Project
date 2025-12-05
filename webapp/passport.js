@@ -38,6 +38,7 @@ async function upsertOAuthUser({ provider, providerId, email, displayName }) {
 
 /*  Google Strategy  */
 // Use real env vars if set; otherwise use dummy values for development/testing
+const googleClientID =
   process.env.GOOGLE_CLIENT_ID || 'dummy-google-client-id';
 const googleClientSecret =
   process.env.GOOGLE_CLIENT_SECRET || 'dummy-google-client-secret';
