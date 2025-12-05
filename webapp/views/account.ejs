@@ -1,0 +1,64 @@
+<%- include('./partials/header') %>
+<%- include('./partials/main_nav') %>
+
+<div class="container mt-5">
+  <h2>Account</h2>
+
+  <% if (success) { %>
+    <div class="alert alert-success"><%= success %></div>
+  <% } %>
+
+  <% if (error) { %>
+    <div class="alert alert-danger"><%= error %></div>
+  <% } %>
+
+  <div class="row">
+    <!-- Profile picture -->
+    <div class="col-md-6 mb-4">
+      <h4>Profile picture</h4>
+
+      <div class="mb-3">
+        <% if (user && user.avatarUrl) { %>
+          <img src="<%= user.avatarUrl %>" alt="Avatar"
+               class="img-thumbnail mb-2"
+               style="max-width:150px; height:150px; object-fit:cover;">
+        <% } else { %>
+          <p>No profile picture yet.</p>
+        <% } %>
+      </div>
+
+      <form action="/account/profile" method="POST" enctype="multipart/form-data">
+        <div class="mb-3">
+          <label class="form-label">Upload new picture</label>
+          <input type="file" name="avatar" class="form-control" accept="image/*" required>
+        </div>
+        <button class="btn btn-primary" type="submit">Save picture</button>
+      </form>
+    </div>
+
+    <!-- Change password -->
+    <div class="col-md-6 mb-4">
+      <h4>Change password</h4>
+
+      <% if (user && !user.hasPassword) { %>
+        <p>This account was created with Google or GitHub; no password to change.</p>
+      <% } else { %>
+        <form action="/account/password" method="POST">
+          <div class="mb-3">
+            <label class="form-label">Current password</label>
+            <input type="password" name="currentPassword" class="form-control" required>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">New password</label>
+            <input type="password" name="newPassword" class="form-control" required>
+          </div>
+
+          <button class="btn btn-primary" type="submit">Change password</button>
+        </form>
+      <% } %>
+    </div>
+  </div>
+</div>
+
+<%- include('./partials/footer') %>
