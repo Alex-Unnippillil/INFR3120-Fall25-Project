@@ -3,17 +3,28 @@ var router = express.Router();
 var bcrypt = require('bcryptjs');
 var User = require('../models/User');
 
-// GET the /login  // res.locals.user is set in app.js already
+// helper: shared logout handler
+function handleLogout(req, res) {
+  req.session.destroy(function (err) {
+    if (err) {
+      console.error('Logout error:', err);
+    }
+    res.clearCookie('connect.sid');
+    return res.redirect('/login');
+  });
+}
+
+// GET /login
 router.get('/login', function (req, res) {
-  res.render('login', { title: 'Login', error: null });
+  res.render('login', { title: 'Login', error: null, user: req.session.user });
 });
 
-// GET /register  (register form) // res.locals.user is set in app.js already
+// GET /register
 router.get('/register', function (req, res) {
-  res.render('register', { title: 'Register', error: null });
+  res.render('register', { title: 'Register', error: null, user: req.session.user });
 });
 
-// POST /register a new user in MongoDB creation
+// POST /register a new user in MongoDB
 router.post('/register', async function (req, res) {
   const { email, password } = req.body;
 
@@ -21,7 +32,8 @@ router.post('/register', async function (req, res) {
     if (!email || !password) {
       return res.status(400).render('register', {
         title: 'Register',
-        error: 'Email & password are required.'
+        error: 'Email & password are required.',
+        user: null
       });
     }
 
@@ -31,7 +43,8 @@ router.post('/register', async function (req, res) {
     if (existing) {
       return res.status(400).render('register', {
         title: 'Register',
-        error: 'The email provided is already registered. Try to login instead.'
+        error: 'The email provided is already registered. Try to login instead.',
+        user: null
       });
     }
 
@@ -40,7 +53,7 @@ router.post('/register', async function (req, res) {
 
     const user = await User.create({ email: normalizedEmail, passwordHash });
 
-    // Save minimal info user id and email in session / not password
+    // Save minimal info (no password) in session
     req.session.user = { id: user._id, email: user.email };
 
     // Go to the protected schedule page
@@ -49,12 +62,13 @@ router.post('/register', async function (req, res) {
     console.error('Register error:', err);
     return res.status(500).render('register', {
       title: 'Register',
-      error: 'Error. Please try again.'
+      error: 'Error. Please try again.',
+      user: null
     });
   }
 });
 
-// POST /login - authenticate user crediations and create session
+// POST /login - authenticate user credentials and create session
 router.post('/login', async function (req, res) {
   const { email, password } = req.body;
 
@@ -62,7 +76,8 @@ router.post('/login', async function (req, res) {
     if (!email || !password) {
       return res.status(400).render('login', {
         title: 'Login',
-        error: 'Email & password required.'
+        error: 'Email & password required.',
+        user: null
       });
     }
 
@@ -72,7 +87,8 @@ router.post('/login', async function (req, res) {
     if (!user) {
       return res.status(400).render('login', {
         title: 'Login',
-        error: 'Invalid email or password.'
+        error: 'Invalid email or password.',
+        user: null
       });
     }
 
@@ -80,11 +96,12 @@ router.post('/login', async function (req, res) {
     if (!passwordMatches) {
       return res.status(400).render('login', {
         title: 'Login',
-        error: 'Invalid email or password.'
+        error: 'Invalid email or password.',
+        user: null
       });
     }
 
-    // Store suer login state in session
+    // Store user login state in session
     req.session.user = { id: user._id, email: user.email };
 
     return res.redirect('/schedule');
@@ -92,23 +109,19 @@ router.post('/login', async function (req, res) {
     console.error('Login error:', err);
     return res.status(500).render('login', {
       title: 'Login',
-      error: 'Something went wrong. Please try again.'
+      error: 'Something went wrong. Please try again.',
+      user: null
     });
   }
 });
 
-// GET /logout / destroy session and redirect to login // clear cookies
-router.get('/logout', function (req, res) {
-  req.session.destroy(function (err) {
-    if (err) {
-      console.error('Logout error:', err);
-    }
-    res.clearCookie('connect.sid');
-    res.redirect('/login');
-  });
-});
+// GET /logout - allow logout via link
+router.get('/logout', handleLogout);
 
-// json endpoint// check login status for frontend JS
+// POST /logout - allow logout via navbar form
+router.post('/logout', handleLogout);
+
+// JSON endpoint - check login status for frontend JS
 router.get('/auth/status', function (req, res) {
   if (req.session && req.session.user) {
     return res.json({
