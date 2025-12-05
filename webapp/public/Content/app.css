@@ -1,0 +1,30 @@
+/* Global UI improvements */
+body {
+  background-color: #f8fafc;
+  font-family: 'Inter', sans-serif;
+  color: #1e293b;
+}
+
+h1, h2, h3 {
+  font-weight: 600;
+}
+
+/* Card styling */
+.card {
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+}
+
+/* Navbar styling */
+.navbar {
+  padding: 14px 24px;
+}
+
+/* Improve table readability */
+table td, table th {
+  padding: 12px 10px;
+}
+
+.text-muted {
+  color: #64748b !important;
+}
