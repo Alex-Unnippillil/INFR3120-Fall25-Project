@@ -38,12 +38,12 @@ async function upsertOAuthUser({ provider, providerId, email, displayName }) {
 
 /*  Google Strategy  */
 // Use real env vars if set; otherwise use dummy values for development/testing
+const googleClientID =
   process.env.GOOGLE_CLIENT_ID || 'dummy-google-client-id';
 const googleClientSecret =
   process.env.GOOGLE_CLIENT_SECRET || 'dummy-google-client-secret';
 const googleCallbackURL =
-  process.env.GOOGLE_CALLBACK_URL ||
-  'http://localhost:3000/auth/google/callback';
+  process.env.GOOGLE_CALLBACK_URL || 'http://localhost:3000/auth/google/callback';
 
 console.log('Registered Google strategy');
 
