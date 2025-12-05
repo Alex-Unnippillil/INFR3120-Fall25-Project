@@ -142,13 +142,12 @@ router.get('/logout', function (req, res) {
 
 /*  Google OAuth  */
 
-// Google login
+// Google
 router.get(
   '/auth/google',
   passport.authenticate('google', { scope: ['profile', 'email'] })
 );
 
-// Google callback
 router.get(
   '/auth/google/callback',
   passport.authenticate('google', {
@@ -156,14 +155,18 @@ router.get(
     session: false
   }),
   function (req, res) {
-    // req.user is the Mongo User from passport.js
-    req.session.user = makeSessionUser(req.user); // store in session
+    req.session.user = {
+      _id: req.user._id,
+      email: req.user.email,
+      displayName: req.user.displayName,
+      avatarUrl: req.user.avatarUrl,
+      hasPassword: !!req.user.passwordHash
+    };
     res.redirect('/schedule');
   }
 );
 
-/*  GitHub OAuth  */
-
+// GitHub
 router.get(
   '/auth/github',
   passport.authenticate('github', { scope: ['user:email'] })
@@ -176,11 +179,17 @@ router.get(
     session: false
   }),
   function (req, res) {
-    req.session.user = makeSessionUser(req.user);
+    req.session.user = {
+      _id: req.user._id,
+      email: req.user.email,
+      displayName: req.user.displayName,
+      avatarUrl: req.user.avatarUrl,
+      hasPassword: !!req.user.passwordHash
+    };
     res.redirect('/schedule');
   }
 );
-
+/*  Account management  *
 /*  Account page- avatar + password change  */
 
 // GET /account

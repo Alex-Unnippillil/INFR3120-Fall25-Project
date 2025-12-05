@@ -4,31 +4,24 @@ var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
+var session = require('express-session');
+var mongoose = require('mongoose');
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 
-var session = require('express-session');
-var mongoose = require('mongoose');
+//  loads ./passport.js and configures strategies
 var passport = require('./passport');
 
 var app = express();
 
 // MongoDB connection
-const mongoUri = process.env.MONGODB_URI;
-
-if (!mongoUri) {
-  console.warn('MONGODB_URI is not set yet warning');
-} else {
-  mongoose
-    .connect(mongoUri)
-    .then(() => {
-      console.log('Successfully connected to MongoDB');
-    })
-    .catch((err) => {
-      console.error('MongoDB connection error:', err);
-    });
-}
+const mongoUri =
+  process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/plansimple';
+mongoose
+  .connect(mongoUri)
+  .then(() => console.log('MongoDB connected'))
+  .catch((err) => console.error('MongoDB connection error:', err));
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -42,8 +35,6 @@ app.use(cookieParser());
 
 // Static files
 app.use(express.static(path.join(__dirname, 'public')));
-
-// use from node_modules
 app.use(
   '/bootstrap',
   express.static(path.join(__dirname, 'node_modules', 'bootstrap'))
@@ -57,30 +48,29 @@ app.use(
   express.static(path.join(__dirname, 'node_modules', '@fortawesome'))
 );
 
-// Sessions
+// Session
 app.use(
   session({
-    secret: process.env.SESSION_SECRET || 'dev-secret-key-change-later0101',
+    secret: process.env.SESSION_SECRET || 'dev-secret',
     resave: false,
     saveUninitialized: false
   })
 );
 
-// Initialize Passport
+// Initialize passport 
 app.use(passport.initialize());
-app.use(passport.session());
 
-// Expose user to all views
+// Make user available in all views 
 app.use(function (req, res, next) {
   res.locals.user = req.session.user || null;
   next();
 });
 
-// routes
+// Routes
 app.use('/', indexRouter);
 app.use('/', usersRouter);
 
-// catch 404 then forward to error handler
+// catch 404 and forward to error handler
 app.use(function (req, res, next) {
   next(createError(404));
 });
