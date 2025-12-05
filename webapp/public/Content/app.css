@@ -1,30 +1,196 @@
-/* Global UI improvements */
+:root {
+  --ps-bg: #020617;
+  --ps-bg-alt: #020617;
+  --ps-card-bg: #0b1120;
+  --ps-primary: #4f46e5;
+  --ps-primary-soft: rgba(79, 70, 229, 0.15);
+  --ps-accent: #6922c5;
+  --ps-border-soft: rgba(148, 163, 184, 0.35);
+  --ps-text-main: #e5e7eb;
+  --ps-text-muted: #9ca3af;
+}
+
+/* Global layout */
+
 body {
-  background-color: #f8fafc;
-  font-family: 'Inter', sans-serif;
-  color: #1e293b;
+  min-height: 100vh;
+  margin: 0;
+  background: #020617;
+  color: var(--ps-text-main);
 }
 
-h1, h2, h3 {
-  font-weight: 600;
+/* Constrain */
+.container {
+  max-width: 960px;
 }
 
-/* Card styling */
-.card {
-  border-radius: 12px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-}
+/* Navbar */
 
-/* Navbar styling */
 .navbar {
-  padding: 14px 24px;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.8);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(148, 163, 184, 0.3);
 }
 
-/* Improve table readability */
-table td, table th {
-  padding: 12px 10px;
+.navbar-brand {
+  font-weight: 700;
+  letter-spacing: 0.03em;
 }
 
-.text-muted {
-  color: #64748b !important;
+.navbar-nav .nav-link {
+  position: relative;
+  font-weight: 500;
+  color: var(--ps-text-muted);
+}
+
+.navbar-nav .nav-link:hover,
+.navbar-nav .nav-link:focus {
+  color: #ffffff;
+}
+
+.navbar-nav .nav-link.active {
+  color: #ffffff;
+}
+
+.navbar-nav .nav-link.active::after,
+.navbar-nav .nav-link:hover::after {
+  content: "";
+  position: absolute;
+  left: 0.75rem;
+  right: 0.75rem;
+  bottom: 0.2rem;
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--ps-primary), var(--ps-accent));
+}
+
+/* Cards & panels */
+
+.card {
+  border-radius: 1rem;
+  background: linear-gradient(135deg, var(--ps-card-bg), #020617);
+  border: 1px solid var(--ps-border-soft);
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.9);
+}
+
+.card-header {
+  border-bottom-color: rgba(148, 163, 184, 0.25);
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 22px 45px rgba(15, 23, 42, 1);
+  transition: transform 0.18s ease-out, box-shadow 0.18s ease-out;
+}
+
+/* Tables */
+
+.table {
+  color: var(--ps-text-main);
+  margin-bottom: 0;
+}
+
+.table thead th {
+  border-bottom-color: rgba(148, 163, 184, 0.4);
+  color: var(--ps-text-muted);
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+}
+
+.table tbody tr {
+  border-color: rgba(30, 64, 175, 0.3);
+}
+
+.table-hover tbody tr:hover {
+  background-color: rgba(30, 64, 175, 0.25);
+}
+
+/* Forms */
+
+.form-control,
+.form-select {
+  background-color: #020617;
+  border-color: rgba(148, 163, 184, 0.55);
+  color: var(--ps-text-main);
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--ps-primary);
+  box-shadow: 0 0 0 0.15rem var(--ps-primary-soft);
+}
+
+.form-label {
+  font-weight: 500;
+}
+
+/* Buttons */
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--ps-primary), #6366f1);
+  border-color: transparent;
+  box-shadow: 0 10px 25px rgba(79, 70, 229, 0.5);
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, #6366f1, #4f46e5);
+  box-shadow: 0 14px 32px rgba(79, 70, 229, 0.8);
+}
+
+.btn-outline-secondary {
+  border-color: rgba(148, 163, 184, 0.65);
+  color: var(--ps-text-muted);
+}
+
+.btn-outline-secondary:hover {
+  background-color: rgba(148, 163, 184, 0.12);
+  color: #ffffff;
+}
+
+.btn-outline-danger {
+  border-color: rgba(239, 68, 68, 0.8);
+}
+
+/* Headings */
+
+.display-4,
+h1,
+h2,
+h3,
+h4,
+h5 {
+  color: #f9fafb;
+}
+
+/* Schedule page tweaks */
+
+#weekCards .card-body {
+  background: radial-gradient(circle at top, rgba(79, 70, 229, 0.08), transparent 55%);
+}
+
+.badge {
+  font-weight: 500;
+}
+
+/* Modals */
+
+.modal-content {
+  background-color: #020617;
+  border-radius: 1rem;
+  border: 1px solid var(--ps-border-soft);
+}
+
+.modal-header {
+  border-bottom-color: rgba(148, 163, 184, 0.35);
+}
+
+.modal-footer {
+  border-top-color: rgba(148, 163, 184, 0.35);
+}
+
+/* Footer */
+
+footer {
+  border-top: 1px solid rgba(148, 163, 184, 0.3);
 }

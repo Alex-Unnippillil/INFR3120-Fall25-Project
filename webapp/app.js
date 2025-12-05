@@ -6,7 +6,6 @@ var logger = require('morgan');
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
-const { title } = require('process');
 
 var session = require('express-session'); // session middleware
 var mongoose = require('mongoose'); // mongoose for MongoDB
