@@ -2,7 +2,11 @@
 
 A daily schedule app focused on productivity. Plan, organize, and track tasks across the week with a clear, structured view of each day.
 
-https://p8idfcynd5.us-east-1.awsapprunner.com/
+
+http://ec2-3-93-174-30.compute-1.amazonaws.com:3000 
+
+
+
 ---
 
 ## Table of Contents
@@ -48,3 +52,4 @@ PlanSimple is **free and open‑source software** released under the MIT License
 You can use it for personal, academic, or commercial projects at no cost.
 See [LICENSE](./LICENSE) for the full license text details.
 
+beta deployment: https://p8idfcynd5.us-east-1.awsapprunner.com/ (test)
